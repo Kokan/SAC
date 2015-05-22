@@ -712,6 +712,7 @@ LeftPart :
 		{$$=new_element_INTEGER (2,$3,0,NULL,$5.id,$1);}
 	|_INTEGER _OPENP _SMALLNAME _DOTDOT _SMALLNAME _CLOSEP 		{$$=new_element_INTEGER (2,0,0,$3.id,$5.id,$1);} 
 	|_INTEGER _OPENP _ENTIER  _CLOSEP {$$=new_element_INTEGER (1,0,$3,NULL,NULL,$1);}
+	|_INTEGER _OPENP _SMALLNAME  _CLOSEP {$$=new_element_INTEGER (1,0,0,NULL,$3.id,$1);}
 	
 	|_ENUMERATED _OPENC ListEnumeration _CLOSEC  {$$=new_element_ENUMERATED ($3,$1);}
 	
