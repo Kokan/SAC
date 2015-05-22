@@ -306,7 +306,7 @@ void print_element (element  el,int offset, FILE *F)
 			if (el.string.link!=NULL) {
 				fprintf (F,"CONTAINING\n");
 				for (i=0;i<offset;i++) 
-					fprintf (F,"\%");
+					fprintf (F,"%%");
 				print_element (*(el.string.link),offset,F);
 			}
 			break;
@@ -317,7 +317,7 @@ void print_element (element  el,int offset, FILE *F)
 			if (el.string.link!=NULL) {
 				fprintf (F,"CONTAINING\n");
 				for (i=0;i<offset;i++) 
-					fprintf (F,"\%");
+					fprintf (F,"%%");
 				print_element (*(el.string.link),offset,F);
 			}
 			break;
