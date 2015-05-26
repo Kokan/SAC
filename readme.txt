@@ -122,11 +122,11 @@ sac.exe file1.asn file2.asn [-w]
 
 For example:
 
-	s.exe 25331-6q0.asn 25331-b60.asn
+	sac.exe 25331-6q0.asn 25331-b60.asn
 
-The first file is the ìoldî one, the second the ìnewî one. They must be from TS25.331 or TS36.331. The two files must "compile", i.e. they should respect ASN.1 syntax. If not, "SAC" will not be able to do the check.
+The first file is the "old" one, the second the ‚Äúnew‚Äù one. They must be from TS25.331 or TS36.331. The two files must "compile", i.e. they should respect ASN.1 syntax. If not, "SAC" will not be able to do the check.
 
-The option ñw (for ìwarningî) allows more warnings to be printed.
+The option ‚Äìw (for "warning") allows more warnings to be printed.
 
 The locations of errors are indicated with line number: the first line number for first file, second line number for second file. (I am using notepad++ as editor). The lines are printed below the error.
 
