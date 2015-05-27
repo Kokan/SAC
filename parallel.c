@@ -479,15 +479,41 @@ int icc2=0;
 			
 			
 			case 6 : { /* ENUMERATED */
-				if (t1->val!=t2->val) {
-					/*the enumerated have not the same number of values */
+				if ( ( (t2->enumer.val2)!= (t1->enumer.val2))) {
+					/*"..."  are not at the same position*/
+
+					fprintf(stdout,"ERROR: ENUMERATED: usage of ... differs line=%d %d\n",t1->line,t2->line);
+
+					add_BR();
+					showlines (t1->line,t2->line);
+					printf ("\n");
+					add_BR();
+					nb_error++;
+					break;	
+				}
+			
+				if ((t1->enumer.val1!=t2->enumer.val1)&&((t2->enumer.val2)==0)) {
+					/*number of item differs  */
 					fprintf(stdout,"ERROR: ENUMERATED: number of item differs line=%d %d\n",t1->line,t2->line);
 					add_BR();
 					showlines (t1->line,t2->line);
 					printf ("\n");
 					add_BR();
 					nb_error++;
+					break;
 				}
+				
+				if ( ((t1->enumer.val1)!=(t2->enumer.val1)) && ((t2->enumer.val2)!=0)  ) {
+					/*"..." is used to extend the number of values */
+					if (print_warnings) {
+						fprintf(stdout,"WARNING: ENUMERATED: ... used to extend the number of elements line=%d %d\n",t1->line,t2->line);
+						add_BR();
+						showlines (t1->line,t2->line);
+						printf ("\n");
+						add_BR();
+					}
+				}
+				
 				break;
 			}
 			

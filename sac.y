@@ -62,12 +62,14 @@ element * new_element_CHOICE ( choice_content * cc,int noline)
 	return (tmp);
 };
 
-element * new_element_ENUMERATED (int noenum,int noline )
+element * new_element_ENUMERATED (int noenum, int indexdot,int noline )
 {
 	element *tmp;
 	tmp=malloc (sizeof(element));
 	tmp->type=6;
-	tmp->val=noenum;
+	tmp->enumer.val1=noenum;
+	tmp->enumer.val2=indexdot;
+	
 	tmp->line=noline;
 	return (tmp);
 };
@@ -324,7 +326,7 @@ void print_element (element  el,int offset, FILE *F)
 		}
 		
 		case 6 : { /* ENUMERATED */
-			fprintf (F,"ENUMEATED [%d]",el.val); 
+			fprintf (F,"ENUMERATED [%d,%d]",el.enumer.val1,el.enumer.val2); 
 			break;
 		}
 		
@@ -562,10 +564,11 @@ void the_big_link (definition_ptr liste)
 int val;
 char *id;
 struct svtype sv;
-/*When we have to give line number +srting, we use a struct */ 
+/*When we have to give line number +string, we use a struct */ 
 element * el_ptr ;
 sequence_content * sc_ptr; 
 choice_content * cc_ptr; 
+struct pairtype ppt;
 }
 
 /* the following token will give the name */
@@ -590,7 +593,8 @@ choice_content * cc_ptr;
 %type <sc_ptr> SequenceContent
 %type <sc_ptr> SequenceAssignList  SequenceAssign  SequenceAssignSingle
 %type <cc_ptr> ChoiceContent ChoiceAssignList    ChoiceAssignSeul
-%type <val> Defaultvalue  ListEnumeration
+%type <val> Defaultvalue   Enumarationcontent
+%type <ppt>  ListEnumeration 
 
 %start program /* the axiom of our grammar */
 %%
@@ -714,13 +718,13 @@ LeftPart :
 	|_INTEGER _OPENP _ENTIER  _CLOSEP {$$=new_element_INTEGER (1,0,$3,NULL,NULL,$1);}
 	|_INTEGER _OPENP _SMALLNAME  _CLOSEP {$$=new_element_INTEGER (1,0,0,NULL,$3.id,$1);}
 	
-	|_ENUMERATED _OPENC ListEnumeration _CLOSEC  {$$=new_element_ENUMERATED ($3,$1);}
+	|_ENUMERATED _OPENC ListEnumeration _CLOSEC  {$$=new_element_ENUMERATED ($3.val1,$3.val2,$1);}
 	
 	|_SEQUENCE _OPENC SequenceContent _CLOSEC { $$=new_element_SEQUENCE ($3,$1);}
 	|_SEQUENCE size _OPENC SequenceContent _CLOSEC {$$=new_element_SEQUENCE ($4,$1);}
-	/* Il faudra prendre en compte la size*/
+	/* The size should be taken into account*/
 	|_SEQUENCE size  _OF LeftPart {$$=$4;$$->line=$1;}
-	/*traite comme un _BIGNAME pour l'instant pour gerer le lien */
+	/*treated as BIGNAME for the moment */
 	|_CHOICE  _OPENC ChoiceContent _CLOSEC {$$=new_element_CHOICE ($3,$1);}
 	| _BIT _STRING bitstrings {$$=new_element_BITSTRING($3,"",$1);}
 	| _OCTET _STRING octetstrings {$$=new_element_OCTETSTRING($3,"",$1);}
@@ -759,13 +763,13 @@ octetstrings :
 ;
 
 ListEnumeration :
-	ListEnumeration _COMMA Enumarationcontent  {$$=$1+1;}
-	| Enumarationcontent {$$=1;}
+	ListEnumeration _COMMA Enumarationcontent  {$$.val1=$1.val1+1;if ($3==1) $$.val2=$$.val1; }
+	| Enumarationcontent {$$.val1=1; $$.val2=0;if ($1==1) $$.val2=1; }
 ;
 
 Enumarationcontent :
-	_SMALLNAME
-	| _THREEDOTS
+	_SMALLNAME {$$=0;}
+	| _THREEDOTS {$$=1;}
 ;
 
 empty:

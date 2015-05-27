@@ -19,6 +19,8 @@ FILE * Logfile;
 
 struct  svtype{int val;char *id;} ;
 
+struct pairtype {int val1;int val2;};
+
 typedef struct element element;
 
 typedef struct definition definition;
@@ -79,7 +81,10 @@ struct element
 			char * size;   /* 4: BITSTRING  or 5:OCTET STRING*/
 			element * link;
 		} string ;
-		int val; /*for 6: ENUMERATED */
+		struct pairtype enumer; /*for 6: ENUMERATED */
+		/* The first value is the number of enumerated. */
+		/* The second indicates the presence of "...": the value is the index of "..." in the list*/
+		/*     0 means absent */
 		struct { /*for 7: INTEGER type */
 			int type; /*0: no limit (not used in 25.331),1: INTEGER (A), 2:INTEGER (A..B)*/
 			int low;
