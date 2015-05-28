@@ -514,6 +514,16 @@ int icc2=0;
 					}
 				}
 				
+				if ((1==t1->enumer.val1)&&(0==op) && (0==source)) {
+					/*"..." is used to extend the number of values */
+					if (print_warnings) {
+						fprintf(stdout,"WARNING: Mandatory ENUMERATED with 1 choice only line=%d %d\n",t1->line,t2->line);
+						add_BR();
+						showlines (t1->line,t2->line);
+						printf ("\n");
+						add_BR();
+					}
+				}
 				break;
 			}
 			
