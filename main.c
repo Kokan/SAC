@@ -225,19 +225,12 @@ char **argv;
 {
 	int ne=0;
 	int size;
+	int i;
 	web= (strstr(argv[0],".cgi")!=NULL); 
 	/*Test if the program is a CGI script or a command line */
 	
 	
-	if (verbose) {
-	/* We give some log information only if variable command verbose=1 */
-		printf ("opening of sac_log.txt \n");
-		Logfile=fopen ("sac_log.txt","w");
-		if (Logfile==NULL) {
-			printf ("Error when opening sac_log.txt\n");
-			return (1);
-		}
-	}
+
 	
 	if (web) {
 		/* CGI version */
@@ -247,13 +240,42 @@ char **argv;
 		/* command line version */
 		printf ("Simple ASN.1 Checker \n\n");
 		if ( argc > 2 )	{
-
 		
-			/* Initialization of the warning */
-			if  (( argc > 3 )&&(!strcmp(argv[3],"-w"))) {
-				printf ("Warning actives\n");
+			/*  Initialization of options */	
+			i=3;
+			while (i<argc) {
+				if  (!strcmp(argv[i],"-w")) {
+				printf ("Warning activated \n");
+				printf ("DEBUG argc=%d i=%d \n",argc,i);
 				print_warnings=1;
+				}
+				
+				if  (!strcmp(argv[i],"-v")) {
+				printf ("Verbose mode activated\n");
+				printf ("DEBUG argc=%d i=%d \n",argc,i);
+				verbose=1;
+				}
+				
+				if  (!strcmp(argv[i],"-ie")) {
+				printf ("IE chain will be printed \n");
+				printf ("DEBUG argc=%d i=%d \n",argc,i);
+				showIEchain=1;
+				}
+				i++;
 			}
+	
+			/*Opening of the log file for writing */
+			if (verbose) {
+				/* We give some log information only if variable command verbose=1 */
+				printf ("opening of sac_log.txt \n");
+				Logfile=fopen ("sac_log.txt","w");
+				if (Logfile==NULL) {
+					printf ("Error when opening sac_log.txt\n");
+					return (1);
+				}
+			}
+		
+		
 		
 			/*  loads the file in memory*/
 			printf ("Loading files in memory");	
@@ -270,7 +292,12 @@ char **argv;
 				puts("Error loading file");
 				return 1;
 			}	 	
-			printf ("OK\n");	
+			printf ("OK\n");
+			
+			
+
+
+			
 			/* -- */	
 			simple_analyse ();
 			/* -- */

@@ -1,4 +1,4 @@
-/*Copyright (C) 2015 Nokia Solutions and Networks. */
+﻿/*Copyright (C) 2015 Nokia Solutions and Networks. */
 
 /*    This file is part of "Simple ASN.1 Checker".                                   */
 /*                                                                                   */
@@ -118,7 +118,7 @@ It can also recognize the extension mechanism (critical and non critical) used i
 
 The syntax is:
 
-sac.exe file1.asn file2.asn [-w]
+sac.exe file1.asn file2.asn [-w] [-ie] [-v]
 
 For example:
 
@@ -126,7 +126,11 @@ For example:
 
 The first file is the "old" one, the second the “new” one. They must be from TS25.331 or TS36.331. The two files must "compile", i.e. they should respect ASN.1 syntax. If not, "SAC" will not be able to do the check.
 
-The option –w (for "warning") allows more warnings to be printed.
+The option –w (for "warning") allows the warnings to be printed.
+
+The option –v (for "verbose") creates a file: "sac_log.txt" for debuging purpose.
+
+The option –ie (for "IE Chain") is for printing the chain of IE in case of an error/warning is found, starting from the PDU that contains the error/warning.
 
 The locations of errors are indicated with line number: the first line number for first file, second line number for second file. (I am using notepad++ as editor). The lines are printed below the error.
 
