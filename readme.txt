@@ -58,7 +58,7 @@ If you want to use the on-line version: do the compilation as explained above, t
 
 	mv sax.exe sac.cgi
 
-Copy this file in the directory where cgi script should be stored on your server.
+Copy this file in the directory where cgi script should be stored on your server. 
 
 The web page that will launch the cgi scipt will contain the following form:
 
@@ -151,4 +151,4 @@ File 2(line 5):FirstIE2 ::= BOOLEAN
 
 
 2.2 Online version
-(TBD)
+The output from the online version are the same as the command line version.
