@@ -390,7 +390,7 @@ int icc2=0;
 		/*source=1: it comes from a CHOICE */
 		/*t1 is a SEQUENCE {}*/
 		/*t2 is a CHOICE  */
-			if (print_warnings) fprintf(stdout,"Warning Allowed critical extension in a CHOICE source=%d line=%d %d\n\n",source,t1->line,t2->line);
+			if (print_warnings) fprintf(stdout,"Warning Allowed critical extension in a CHOICE line=%d %d\n\n",t1->line,t2->line);
 			IEChain1=remove_n_last_IE (IEChain1,icc1);
 			IEChain2=remove_n_last_IE (IEChain2,icc2);
 			add_BR();
