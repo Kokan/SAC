@@ -46,6 +46,7 @@ IE_chain * IEChain2=NULL;
 extern int web; /*Boolean to indicate if the compilation is done for cgi */
 
 int nb_error=0; /*number of non backward compatible errors*/
+int nb_warnings=0; /*number of non backward compatible errors*/
 
 void showlines (int l1,int l2);
 void safe_print (char *s) ;
@@ -186,6 +187,7 @@ int para_browse_content_sequence ( sequence_content * sc1, sequence_content * sc
 			showlines (l1,l2);
 			printf ("\n");
 			add_BR();
+			nb_warnings++;
 		}
 	return (0);
 	}
@@ -218,9 +220,9 @@ int para_browse_content_sequence ( sequence_content * sc1, sequence_content * sc
 			if (strcmp (sc1->ie_value_name,sc2->ie_value_name)) {
 				if (print_warnings) {
 					fprintf(stdout,"Warning: name mismatch %s %s line %d %d\n\n",sc1->ie_value_name,sc2->ie_value_name,sc1->elem->line,sc2->elem->line);
-					
 					add_BR();
 					add_BR();
+					nb_warnings++;
 				}
 			}
 			IEChain1=add_IE2(IEChain1,sc1->ie_value_name);	
@@ -279,6 +281,7 @@ int para_browse_choice_content ( choice_content * cc1, choice_content *cc2,int o
 				if (print_warnings) {
 					fprintf(stdout,"Warning: name mismatch %s %s line %d %d\n",cc1->ie_value_name,cc2->ie_value_name,cc1->elem->line,cc2->elem->line);
 					add_BR();
+					nb_warnings++;
 				}
 			}		
 			IEChain1=add_IE2(IEChain1,cc1->ie_value_name);	
@@ -339,6 +342,7 @@ int icc2=0;
 					fprintf(stdout,"Warning: name mismatch %s %s\n\n",t1->IE.IE_name,t2->IE.IE_name);
 					add_BR ();
 					add_BR();
+					nb_warnings++;
 				}
 			}
 		}
@@ -365,6 +369,7 @@ int icc2=0;
 				fprintf(stdout,"Warning Allowed critical extension in CHOICE with NULL line %d %d \n\n",t1->line,t2->line);
 				add_BR();
 				add_BR();
+				nb_warnings++;
 			}
 			IEChain1=remove_n_last_IE (IEChain1,icc1);
 			IEChain2=remove_n_last_IE (IEChain2,icc2);
@@ -380,6 +385,7 @@ int icc2=0;
 				fprintf(stdout,"Warning: SEQUENCE {} MP in a SEQUENCE line=%d %d\n\n",t1->line,t2->line);
 				add_BR();
 				add_BR();
+				nb_warnings++;
 			}
 			
 		}
@@ -395,6 +401,7 @@ int icc2=0;
 			IEChain2=remove_n_last_IE (IEChain2,icc2);
 			add_BR();
 			add_BR();
+			nb_warnings++;
 			return (0);			
 		}
 		
@@ -443,6 +450,7 @@ int icc2=0;
 								fprintf (stdout,"Allowed extension in BITSTRING :line:%d %d\n\n",t1->line,t2->line);
 								add_BR();
 								add_BR();
+								nb_warnings++;
 							}
 						} else
 						{
@@ -511,6 +519,7 @@ int icc2=0;
 						showlines (t1->line,t2->line);
 						printf ("\n");
 						add_BR();
+						nb_warnings++;
 					}
 				}
 				
@@ -522,6 +531,7 @@ int icc2=0;
 						showlines (t1->line,t2->line);
 						printf ("\n");
 						add_BR();
+						nb_warnings++;
 					}
 				}
 				break;
@@ -573,6 +583,7 @@ int icc2=0;
 			printf ("Warning(link): One of the element is empty\n\n");
 			add_BR();
 			add_BR();
+			nb_warnings++;
 		}
 	IEChain1=remove_n_last_IE (IEChain1,icc1);
 	IEChain2=remove_n_last_IE (IEChain2,icc2);
@@ -777,5 +788,9 @@ int  para ()
 	add_BR();
 	clean_IE_chain(IEChain1);
 	clean_IE_chain(IEChain2);
+	if (print_warnings) {
+		printf ("Number of warnings : %d\n",nb_warnings);
+		add_BR();
+	}
 	return (nb_error);
 }
