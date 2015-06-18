@@ -170,7 +170,7 @@ int para_def (definition * l1, definition * l2)
 			nb_error++;
 			return (0);
 		}		
-		para_browse_element (l1->elem,l2->elem,0,0);	
+		para_browse_element (l1->elem,l2->elem,0,-1,0);	
 	}	
 }
 
@@ -188,6 +188,7 @@ int para_browse_content_sequence ( sequence_content * sc1, sequence_content * sc
 			printf ("\n");
 			add_BR();
 			nb_warnings++;
+			new_branch_browse_content_sequence (sc2,1,l2);
 		}
 	return (0);
 	}
@@ -330,6 +331,7 @@ int icc1=0;
 int icc2=0;
 /* used to save the line of the first IE in case of the definition is done in another place */
 
+
 	if ((t1!=NULL)&&(t2!=NULL)) {
 		int i;
 		line1=t1->line;
@@ -370,6 +372,7 @@ int icc2=0;
 				add_BR();
 				add_BR();
 				nb_warnings++;
+				new_branch_browse_element (t2,1,op);
 			}
 			IEChain1=remove_n_last_IE (IEChain1,icc1);
 			IEChain2=remove_n_last_IE (IEChain2,icc2);
@@ -391,17 +394,19 @@ int icc2=0;
 		}
 		
 		
-				/* case of critical extention : SEQUENCE {} becomes CHOICE inside a CHOICE */
+		/* case of critical extention : SEQUENCE {} becomes CHOICE inside a CHOICE */
 		if ((op==0)&&(source==1)&&(t1->type==0)&&(t2->type==1)&&(t1->a==NULL)) {
 		/*source=1: it comes from a CHOICE */
 		/*t1 is a SEQUENCE {}*/
 		/*t2 is a CHOICE  */
 			if (print_warnings) fprintf(stdout,"Warning Allowed critical extension in a CHOICE line=%d %d\n\n",t1->line,t2->line);
+			new_branch_browse_element (t2,1,op); 
 			IEChain1=remove_n_last_IE (IEChain1,icc1);
 			IEChain2=remove_n_last_IE (IEChain2,icc2);
 			add_BR();
 			add_BR();
 			nb_warnings++;
+
 			return (0);			
 		}
 		
@@ -439,6 +444,7 @@ int icc2=0;
 			}
 			
 			case 4 : { /* BITSTRING  */
+
 				if ((t1->string.link!=NULL)&&(t2->string.link!=NULL)){
 					para_browse_element (t1->string.link, t2->string.link,offset,-1,op);
 					/*for the moment we only check the content*/
@@ -451,6 +457,7 @@ int icc2=0;
 								add_BR();
 								add_BR();
 								nb_warnings++;
+								new_branch_browse_element (t2->string.link,-1,op);
 							}
 						} else
 						{
@@ -627,6 +634,12 @@ void browse_PDUpara (definition_ptr liste1, definition_ptr liste2){
 	printf("\n");
 }	
 
+
+
+
+
+
+
 /* procedures to free the memory */ 
 void free_element (element * elptr);
 
@@ -705,6 +718,121 @@ void free_IE_Chain (IE_chain * iec ) {
 
 /* End of procedures to free the memory */
 
+/* new branch parsing */
+
+int new_branch_browse_element (element *t2,int source, int op) {
+/*source what is calling the function: 0:SEQUENCE, 1:CHOICE, -1:OTHER */
+/*op: optionality of the IE in case of a sequence : 0  Mandatory, 1 OPTIONAL 2 DEFAULT */
+
+	int line2;
+	int icc2=0;
+
+	/* used to save the line of the first IE in case of the definition is done in another place */
+
+	if (t2!=NULL) {
+		int i;
+		line2=t2->line;
+
+		/* Resolve IE_NAME-> Definition */ 
+		while ((t2->type==10)&&(t2->IE.link!=NULL))  {
+			IEChain2=add_IE2 (IEChain2,t2->IE.IE_name);
+			icc2++;
+			t2=t2->IE.link;
+		}
+
+
+		/* printf (" TYPE: %d ",el.type); */
+		switch (t2->type) {
+			case 0 : { /* SEQUENCE */
+				new_branch_browse_content_sequence ( t2->a,op,t2->line);
+				break;
+			}
+			
+			case 1 : { /* CHOICE */
+				new_branch_browse_choice_content ( t2->b,t2->line);
+				break;
+			}
+
+			case 4 : { /* BITSTRING  */
+				if (t2->string.link!=NULL){
+					new_branch_browse_element (t2->string.link,-1,op);
+				} 
+				break;
+			}
+			
+			case 5 : { /* OCTETSTRING  */
+				if (t2->string.link!=NULL){
+					new_branch_browse_element (t2->string.link,-1,op);
+				} 
+				break;
+			}
+			
+			case 6 : { /* ENUMERATED */
+				if ((1==t2->enumer.val1)&&(0==op)&& (0==source)) {
+	
+					if (print_warnings) {
+						fprintf(stdout,"WARNING: Mandatory ENUMERATED with 1 choice only in the new branch line=%d\n",t2->line);
+						add_BR();
+						printf ("IE Chain for File 2:");
+						printf ("\n");
+						add_BR();
+						print_IE_chain (IEChain2);
+						printf ("\n");
+						add_BR();
+
+						printf ("\n");
+						add_BR();
+						nb_warnings++;
+					}
+				}
+				break;
+			}
+
+		}
+	}	
+	IEChain2=remove_n_last_IE (IEChain2,icc2);
+}
+
+
+int new_branch_browse_content_sequence (sequence_content * sc2,int op, int l2){
+/*op: Optionality of the SEQUENCE : 0 Mandatory, 1 : OPTIONAL*/
+/*l2: line of the beginning of the SEQUENCE */	
+
+
+	IE_chain * ic2;
+
+	while (sc2!=NULL) {		
+	
+		IEChain2=add_IE2(IEChain2,sc2->ie_value_name);
+		new_branch_browse_element (sc2->elem,0,sc2->optionality);
+		IEChain2=remove_last_IE(IEChain2);
+		sc2=sc2->nxt;
+		
+	}
+	return (0);
+}
+
+int new_branch_browse_choice_content (choice_content *cc2,int line2){
+	int	tdflag=0;
+
+	IE_chain * ic2;
+	while (cc2!=NULL) {		
+		IEChain2=add_IE2(IEChain2,cc2->ie_value_name);
+		new_branch_browse_element (cc2->elem,1,0);
+		IEChain2=remove_last_IE(IEChain2);
+		cc2=cc2->nxt;
+	}
+	return (0);
+}
+				
+			
+/* End of new branch parsing*/
+
+
+
+
+/* Printing procedures*/
+
 void safe_print (char*s) {
 //This function is used to print in case of online versio (CGI). It prevents malicious code to be executed.
 	char *t;
@@ -766,20 +894,24 @@ void showlines (int l1,int l2) {
 	add_BR();
 	
 	if (showIEchain) {
-		printf ("IE Chain for File 1:");
-		printf ("\n");
-		add_BR();
-		print_IE_chain (IEChain1);
-		printf ("\n");
-		add_BR();
-		printf ("IE Chain for File 2:");
-		printf ("\n");
-		add_BR();
-		print_IE_chain (IEChain2);
-		printf ("\n");
-		add_BR();
+		print_both_IEchain ();
 	}
 }	
+
+int print_both_IEchain () {
+	printf ("IE Chain for File 1:");
+	printf ("\n");
+	add_BR();
+	print_IE_chain (IEChain1);
+	printf ("\n");
+	add_BR();
+	printf ("IE Chain for File 2:");
+	printf ("\n");
+	add_BR();
+	print_IE_chain (IEChain2);
+	printf ("\n");
+	add_BR();
+}
 	
 int  para ()
 {
