@@ -246,19 +246,16 @@ char **argv;
 			while (i<argc) {
 				if  (!strcmp(argv[i],"-w")) {
 				printf ("Warning activated \n");
-				printf ("DEBUG argc=%d i=%d \n",argc,i);
 				print_warnings=1;
 				}
 				
 				if  (!strcmp(argv[i],"-v")) {
 				printf ("Verbose mode activated\n");
-				printf ("DEBUG argc=%d i=%d \n",argc,i);
 				verbose=1;
 				}
 				
 				if  (!strcmp(argv[i],"-ie")) {
 				printf ("IE chain will be printed \n");
-				printf ("DEBUG argc=%d i=%d \n",argc,i);
 				showIEchain=1;
 				}
 				i++;
