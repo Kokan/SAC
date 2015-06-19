@@ -170,11 +170,11 @@ int para_def (definition * l1, definition * l2)
 			nb_error++;
 			return (0);
 		}		
-		para_browse_element (l1->elem,l2->elem,0,-1,0);	
+		para_browse_element (l1->elem,l2->elem,-1,0);	
 	}	
 }
 
-int para_browse_content_sequence ( sequence_content * sc1, sequence_content * sc2,int offset,int op,int l1, int l2){
+int para_browse_content_sequence ( sequence_content * sc1, sequence_content * sc2,int op,int l1, int l2){
 /*op: Optionality of the SEQUENCE : 0 Mandatory, 1 : OPTIONAL*/
 /*l1 and l2: lines of the beginning of the SEQUENCE in the 2 files */	
 	int tdflag=0; /*Flag tdflag (Three Dots flag) indicate that the SEQUENCE has been extended with three dots */
@@ -228,7 +228,7 @@ int para_browse_content_sequence ( sequence_content * sc1, sequence_content * sc
 			}
 			IEChain1=add_IE2(IEChain1,sc1->ie_value_name);	
 			IEChain2=add_IE2(IEChain2,sc2->ie_value_name);
-			para_browse_element (sc1->elem, sc2->elem,offset,0,sc1->optionality);
+			para_browse_element (sc1->elem, sc2->elem,0,sc1->optionality);
 			IEChain1=remove_last_IE(IEChain1);
 			IEChain2=remove_last_IE(IEChain2);
 	
@@ -257,7 +257,7 @@ int para_browse_content_sequence ( sequence_content * sc1, sequence_content * sc
 	return (0);
 }
 			
-int para_browse_choice_content ( choice_content * cc1, choice_content *cc2,int offset,int line1, int line2){
+int para_browse_choice_content ( choice_content * cc1, choice_content *cc2,int line1, int line2){
 	int	tdflag=0;
 	IE_chain * ic1;
 	IE_chain * ic2;
@@ -287,7 +287,7 @@ int para_browse_choice_content ( choice_content * cc1, choice_content *cc2,int o
 			}		
 			IEChain1=add_IE2(IEChain1,cc1->ie_value_name);	
 			IEChain2=add_IE2(IEChain2,cc2->ie_value_name);
-			para_browse_element (cc1->elem, cc2->elem,offset,1,0);
+			para_browse_element (cc1->elem, cc2->elem,1,0);
 			IEChain1=remove_last_IE(IEChain1);
 			IEChain2=remove_last_IE(IEChain2);
 	
@@ -309,17 +309,17 @@ int para_browse_choice_content ( choice_content * cc1, choice_content *cc2,int o
 }
 			
 
-int para_browse_NULL ( int offset){
+int para_browse_NULL ( ){
 }
 
-int para_browse_BOOLEAN ( int offset){
+int para_browse_BOOLEAN ( ){
 }
 
-int para_browse_IE_Name (element *t1, element * t2,int offset){
+int para_browse_IE_Name (element *t1, element * t2){
 /* This function is never called */
 }
 
-int para_browse_element (element *t1, element *t2,int offset,int source,int op) {
+int para_browse_element (element *t1, element *t2,int source,int op) {
 /*source what is calling the function: 0:SEQUENCE, 1:CHOICE, -1:OTHER */
 /*op: optionality of the IE in case of a sequence : 0  Mandatory, 1 OPTIONAL 2 DEFAULT */
 /*This is used for the SEQUENCE {} OPTIONAL detection*/
@@ -427,26 +427,26 @@ int icc2=0;
 		/* printf (" TYPE: %d ",el.type); */
 		switch (t1->type) {
 			case 0 : { /* SEQUENCE */
-				para_browse_content_sequence ( t1->a,t2->a,offset+1,op,t1->line,t2->line);
+				para_browse_content_sequence ( t1->a,t2->a,op,t1->line,t2->line);
 				break;
 			}
 			case 1 : { /* CHOICE */
-				para_browse_choice_content ( t1->b,t2->b,offset+1,t1->line,t2->line);
+				para_browse_choice_content ( t1->b,t2->b,t1->line,t2->line);
 				break;
 			}
 			case 2 : { /* NULL */
-				para_browse_NULL ( offset);
+				para_browse_NULL ( );
 				break;
 			}
 			case 3 : { /* BOOLEAN */
-				para_browse_BOOLEAN ( offset);
+				para_browse_BOOLEAN ( );
 				break;
 			}
 			
 			case 4 : { /* BITSTRING  */
 
 				if ((t1->string.link!=NULL)&&(t2->string.link!=NULL)){
-					para_browse_element (t1->string.link, t2->string.link,offset,-1,op);
+					para_browse_element (t1->string.link, t2->string.link,-1,op);
 					/*for the moment we only check the content*/
 				} else
 				{
@@ -475,7 +475,7 @@ int icc2=0;
 			
 			case 5 : { /* OCTETSTRING  */
 				if ((t1->string.link!=NULL)&&(t2->string.link!=NULL)){
-					para_browse_element (t1->string.link, t2->string.link,offset,-1,op);
+					para_browse_element (t1->string.link, t2->string.link,-1,op);
 					/*for the moment we only check the content*/
 				} else
 				{
@@ -574,11 +574,11 @@ int icc2=0;
 			
 			case 10 : { /* IE name */
 			/*I don't think this part is used because we try to resolve the links at the begining*/
-				para_browse_IE_Name ( t1,t2,offset);
+				para_browse_IE_Name ( t1,t2);
 				
 				if ((t1->IE.link!=NULL)&& (t2->IE.link!=NULL)){
 				
-					para_browse_element (t1->IE.link, t2->IE.link,offset,-1,op);	
+					para_browse_element (t1->IE.link, t2->IE.link,-1,op);	
 				}
 			break;
 				
