@@ -773,12 +773,14 @@ int new_branch_browse_element (element *t2,int source, int op) {
 					if (print_warnings) {
 						fprintf(stdout,"WARNING: Mandatory ENUMERATED with 1 choice only in the new branch line=%d\n",t2->line);
 						add_BR();
-						printf ("IE Chain for File 2:");
-						printf ("\n");
-						add_BR();
-						print_IE_chain (IEChain2);
-						printf ("\n");
-						add_BR();
+						if (showIEchain) {
+							printf ("IE Chain for File 2:");
+							printf ("\n");
+							add_BR();
+							print_IE_chain (IEChain2);
+							printf ("\n");
+							add_BR();
+						}
 
 						printf ("\n");
 						add_BR();
