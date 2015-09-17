@@ -478,14 +478,25 @@ int icc2=0;
 					para_browse_element (t1->string.link, t2->string.link,-1,op);
 					/*for the moment we only check the content*/
 				} else
-				{
+		{
 					if ((t1->string.link!=NULL)||(t2->string.link!=NULL)){
-						fprintf (stdout,"ERROR in OCTET STRING :line:%d %d\n",t1->line,t2->line);
-						add_BR();
-						showlines (t1->line,t2->line);
-						printf ("\n");
-						add_BR();
-						nb_error++;
+						if (t1->string.link==NULL) {
+							if (print_warnings) {
+								fprintf (stdout,"Allowed extension in OCTET STRING :line:%d %d\n\n",t1->line,t2->line);
+								add_BR();
+								add_BR();
+								nb_warnings++;
+								new_branch_browse_element (t2->string.link,-1,op);
+							}
+						} else
+						{
+							fprintf (stdout,"ERROR: in OCTET STRING :line:%d %d\n",t1->line,t2->line);
+							add_BR();
+							showlines (t1->line,t2->line);
+							printf ("\n");
+							add_BR();
+							nb_error++;
+						}
 					}
 				}
 				break;
