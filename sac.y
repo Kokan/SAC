@@ -725,6 +725,9 @@ LeftPart :
 	/* The size should be taken into account*/
 	|_SEQUENCE size  _OF LeftPart {$$=$4;$$->line=$1;}
 	/*treated as BIGNAME for the moment */
+	|_SEQUENCE  _OF LeftPart {$$=$3;$$->line=$1;}
+	/*treated as BIGNAME for the moment */
+	
 	|_CHOICE  _OPENC ChoiceContent _CLOSEC {$$=new_element_CHOICE ($3,$1);}
 	| _BIT _STRING bitstrings {$$=new_element_BITSTRING($3,"",$1);}
 	| _OCTET _STRING octetstrings {$$=new_element_OCTETSTRING($3,"",$1);}
@@ -736,6 +739,7 @@ size :
 	|	_OPENP _SIZE _OPENP _SMALLNAME				_CLOSEP _CLOSEP
 	|	_OPENP _SIZE _OPENP _ENTIER _DOTDOT _ENTIER	_CLOSEP _CLOSEP
 	|	_OPENP _SIZE _OPENP _ENTIER _DOTDOT _SMALLNAME _CLOSEP _CLOSEP
+	|	_OPENP _SIZE _OPENP _SMALLNAME _DOTDOT _SMALLNAME _CLOSEP _CLOSEP
 ;
 
 bitstrings :
