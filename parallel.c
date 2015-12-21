@@ -577,22 +577,41 @@ int icc2=0;
 					nb_error++;
 				}
 				break;
-				
-				break;
 			}
 
-
-			
 			case 10 : { /* IE name */
 			/*I don't think this part is used because we try to resolve the links at the begining*/
 				para_browse_IE_Name ( t1,t2);
-				
 				if ((t1->IE.link!=NULL)&& (t2->IE.link!=NULL)){
-				
 					para_browse_element (t1->IE.link, t2->IE.link,-1,op);	
 				}
-			break;
+				break;
+			}
+			case 11 : { /* SEQUENCE OF  */
+				if (t1->sequence_of.type!=t2->sequence_of.type) {
+					/*The two SIZE of SEQUENCE OF do not have the same type */
+					fprintf(stdout,"ERROR: SIZE type mismatch for SEQUENCE OF line=%d %d\n",t1->line,t2->line);
+					add_BR();
+					showlines (t1->line,t2->line);
+					printf ("\n");
+					add_BR();
+					nb_error++;
+				}
 				
+				if  ((t1->sequence_of.low!=t2->sequence_of.low) || ((t1->sequence_of.high!=t2->sequence_of.high))) {
+					/*The two SIZE do not have the same limits */
+					fprintf(stdout,"ERROR: Two SIZE of SEQUENCE OF  do not have the same limits line=%d %d\n",t1->line,t2->line);
+					add_BR();
+					showlines (t1->line,t2->line);
+					printf ("\n");
+					add_BR();
+					nb_error++;
+				}
+				if ((t1->sequence_of.link!=NULL)&&(t2->sequence_of.link!=NULL)){
+					para_browse_element (t1->sequence_of.link, t2->sequence_of.link,-1,op);
+					/*for the moment we only check the content*/
+				}
+				break;
 			}
 		}
 	}	
@@ -644,11 +663,6 @@ void browse_PDUpara (definition_ptr liste1, definition_ptr liste2){
     } /* while(tmp1 != NULL) */
 	printf("\n");
 }	
-
-
-
-
-
 
 
 /* procedures to free the memory */ 
@@ -800,7 +814,12 @@ int new_branch_browse_element (element *t2,int source, int op) {
 				}
 				break;
 			}
-
+			case 11 : { /* SEQUENCE OF  */
+				if (t2->sequence_of.link!=NULL){
+					new_branch_browse_element (t2->string.link,-1,op);
+				} 
+				break;
+			}
 		}
 	}	
 	IEChain2=remove_n_last_IE (IEChain2,icc2);

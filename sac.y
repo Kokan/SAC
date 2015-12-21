@@ -15,6 +15,8 @@
 /*    You should have received a copy of the GNU General Public License              */
 /*    along with "Simple ASN.1 Checker".  If not, see <http://www.gnu.org/licenses/>.*/
 
+/* TO DO: enhance the handling of (SIZE) for INTEGER and SEQUENCE OF */
+
 %{ 
 #include <stdio.h>
 #include <string.h>
@@ -103,6 +105,37 @@ element * new_element_IE_name ( char * s,int noline)
 	tmp->line=noline;
 	return (tmp);
 };
+
+element * new_element_sequence_of (element * el ,int noline) {
+	element *tmp;
+	tmp=malloc (sizeof(element));
+	tmp->type=11;
+	tmp->sequence_of.link=el;
+	tmp->line=noline;
+	tmp->sequence_of.type=0;
+	tmp->sequence_of.low=-1;
+	tmp->sequence_of.high=-1;
+	tmp->sequence_of.idlow=NULL;
+	tmp->sequence_of.idhigh=NULL;	
+	
+	return (tmp);
+};
+
+element * new_element_sequence_of_with_size (element* el ,int noline,struct sizetype size) {
+	element *tmp;
+	tmp=malloc (sizeof(element));
+	tmp->type=11;
+	tmp->sequence_of.link=el;
+	tmp->line=noline;
+	tmp->sequence_of.type=size.type;
+	tmp->sequence_of.low=size.val1;
+	tmp->sequence_of.high=size.val2;
+	tmp->sequence_of.idlow=size.s1;
+	tmp->sequence_of.idhigh=size.s2;	
+
+	return (tmp);
+};
+
 
 element * new_element_BITSTRING ( element *el,char * s, int noline)
 {
@@ -279,6 +312,28 @@ void print_constant (constant * co,FILE * F) {
 void print_content_sequence ( sequence_content  * liste,int offset,FILE * F);
 void print_choice_content ( choice_content  * liste,int offset, FILE * F);
 
+void print_size_sequence_of (element el, FILE * F) {
+	switch (el.sequence_of.type) {
+		case 0 : {
+		break;
+		}
+		case 1 : { /* SIZE (A) */
+ 		if (el.sequence_of.high!=-1) fprintf (F,"(SIZE(%d))",el.sequence_of.high);
+			else  fprintf (F,"SIZE(%s)",el.sequence_of.idhigh);
+		break;
+		}
+		case 2 : { /* SIZE (A..B) */
+		fprintf (F,"(SIZE(");
+ 		if (el.sequence_of.low!=-1) fprintf (F,"%d..",el.sequence_of.low);
+			else  fprintf (F,"%s..",el.sequence_of.idlow);
+		if (el.sequence_of.high!=-1) fprintf (F,"%d",el.sequence_of.high);
+			else  fprintf (F,"%s",el.sequence_of.idhigh);
+		fprintf (F,"))");
+		break;
+		}
+	}
+} 
+
 void print_element (element  el,int offset, FILE *F)
 {
 	int i;
@@ -331,6 +386,8 @@ void print_element (element  el,int offset, FILE *F)
 		}
 		
 		case 7 : { /* INTEGER */
+		/* This is not 100% correct and need to be corrected */
+		/* there are issues when variable are used and not yet translated to values*/
 			switch (el.integ.type){
 				case 0 : { /* INTEGER */
 					fprintf (F,"INTEGER "); 
@@ -364,6 +421,21 @@ void print_element (element  el,int offset, FILE *F)
 			}
 			break;
 		}
+		case 11 : { /* SEQUENCE OF */
+			fprintf (F,"SEQUENCE OF "); 
+			print_size_sequence_of  (el,F);
+			if (el.sequence_of.link!=NULL) {
+				fprintf (F,"\n");
+				for (i=0;i<offset;i++) 
+					fprintf (F,"+");
+				print_element (*(el.sequence_of.link),offset+1,F);
+			}
+			break;
+		}
+
+		
+		
+		
 	}
 }
 
@@ -508,11 +580,11 @@ void   browse_element (element * elptr)
 		case 7 : { /*INTEGER give value to constant */
 			if (elptr->integ.id!=NULL) {
 				elptr->integ.high=find_value(elptr->integ.id,constant_list);
-				if (verbose) fprintf(Logfile,"Constant Assignment %s=%d\n",elptr->integ.id,elptr->integ.high);
+				if (verbose) fprintf(Logfile,"Constant Assignment for INTEGER %s=%d\n",elptr->integ.id,elptr->integ.high);
 			}
 			if (elptr->integ.idlow!=NULL) {
 				elptr->integ.low=find_value(elptr->integ.idlow,constant_list);
-				if (verbose) fprintf(Logfile,"Constant Assignment %s=%d\n",elptr->integ.idlow,elptr->integ.low);
+				if (verbose) fprintf(Logfile,"Constant Assignment for INTEGER %s=%d\n",elptr->integ.idlow,elptr->integ.low);
 			}
 			break;
 		}
@@ -531,10 +603,27 @@ void   browse_element (element * elptr)
 					tmp->PDU=0;
 				}
 				tmp = tmp->nxt;
-			}
-			
+			}	
 			break;
 		}
+		
+		case 11 : { /*SEQUENCE OF. Give value to constant and link to content*/
+			if (elptr->sequence_of.type!=0) {
+				if (elptr->sequence_of.idlow!=NULL) {
+					elptr->sequence_of.low=find_value(elptr->sequence_of.idlow,constant_list);
+					if (verbose) fprintf(Logfile,"Constant Assignment for SIZE in SEQUENCE OF  %s=%d\n",elptr->sequence_of.idlow,elptr->sequence_of.low);
+				}			
+			
+				if (elptr->sequence_of.idhigh!=NULL) {
+					elptr->sequence_of.high=find_value(elptr->sequence_of.idhigh,constant_list);
+					if (verbose) fprintf(Logfile,"Constant Assignment for SIZE in SEQUENCE OF  %s=%d\n",elptr->sequence_of.idhigh,elptr->sequence_of.high);
+				}
+			}
+			if (elptr->sequence_of.link!=NULL) {
+				browse_element (elptr->sequence_of.link);}
+			break;
+		}
+		
 	}
 }
 
@@ -569,6 +658,7 @@ element * el_ptr ;
 sequence_content * sc_ptr; 
 choice_content * cc_ptr; 
 struct pairtype ppt;
+struct sizetype size_value;
 }
 
 /* the following token will give the name */
@@ -595,6 +685,7 @@ struct pairtype ppt;
 %type <cc_ptr> ChoiceContent ChoiceAssignList    ChoiceAssignSeul
 %type <val> Defaultvalue   Enumarationcontent
 %type <ppt>  ListEnumeration 
+%type <size_value> size 
 
 %start program /* the axiom of our grammar */
 %%
@@ -721,26 +812,25 @@ LeftPart :
 	|_ENUMERATED _OPENC ListEnumeration _CLOSEC  {$$=new_element_ENUMERATED ($3.val1,$3.val2,$1);}
 	
 	|_SEQUENCE _OPENC SequenceContent _CLOSEC { $$=new_element_SEQUENCE ($3,$1);}
-	|_SEQUENCE size _OPENC SequenceContent _CLOSEC {$$=new_element_SEQUENCE ($4,$1);}
+
 	/* The size should be taken into account*/
-	|_SEQUENCE size  _OF LeftPart {$$=$4;$$->line=$1;}
-	/*treated as BIGNAME for the moment */
-	|_SEQUENCE  _OF LeftPart {$$=$3;$$->line=$1;}
-	/*treated as BIGNAME for the moment */
-	
+	|_SEQUENCE size  _OF LeftPart {$$=new_element_sequence_of_with_size ($4,$1,$2);}
+	|_SEQUENCE  _OF LeftPart {$$=new_element_sequence_of ($3,$1);}
+
 	|_CHOICE  _OPENC ChoiceContent _CLOSEC {$$=new_element_CHOICE ($3,$1);}
 	| _BIT _STRING bitstrings {$$=new_element_BITSTRING($3,"",$1);}
 	| _OCTET _STRING octetstrings {$$=new_element_OCTETSTRING($3,"",$1);}
 	| _NULL {$$=new_element_NULL ($1);}
 ;
 
+
 size :
-		_OPENP _SIZE _OPENP _ENTIER					_CLOSEP _CLOSEP
-	|	_OPENP _SIZE _OPENP _SMALLNAME				_CLOSEP _CLOSEP
-	|	_OPENP _SIZE _OPENP _ENTIER _DOTDOT _ENTIER	_CLOSEP _CLOSEP
-	|	_OPENP _SIZE _OPENP _ENTIER _DOTDOT _SMALLNAME _CLOSEP _CLOSEP
-	|	_OPENP _SIZE _OPENP _SMALLNAME _DOTDOT _SMALLNAME _CLOSEP _CLOSEP
-;
+		_OPENP _SIZE _OPENP _ENTIER					_CLOSEP _CLOSEP       {$$.type=1; $$.val1=-1; $$.val2=$4; $$.s1=NULL;  $$.s2=NULL;}
+	|	_OPENP _SIZE _OPENP _SMALLNAME				_CLOSEP _CLOSEP       {$$.type=1; $$.val1=-1; $$.val2=-1; $$.s1=NULL;  $$.s2=$4.id;}
+	|	_OPENP _SIZE _OPENP _ENTIER _DOTDOT _ENTIER	_CLOSEP _CLOSEP       {$$.type=2; $$.val1=$4; $$.val2=$6; $$.s1=NULL;  $$.s2=NULL;}
+	|	_OPENP _SIZE _OPENP _ENTIER _DOTDOT _SMALLNAME _CLOSEP _CLOSEP    {$$.type=2; $$.val1=$4; $$.val2=-1; $$.s1=NULL;  $$.s2=$6.id;}
+	|	_OPENP _SIZE _OPENP _SMALLNAME _DOTDOT _SMALLNAME _CLOSEP _CLOSEP {$$.type=2; $$.val1=-1; $$.val2=-1; $$.s1=$4.id; $$.s2=$6.id;}
+	
 
 bitstrings :
 		 {$$=NULL;} /*Note this is the case of a element pointer to NULL is generated*/

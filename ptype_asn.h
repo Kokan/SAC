@@ -21,6 +21,10 @@ struct  svtype{int val;char *id;} ;
 
 struct pairtype {int val1;int val2;};
 
+struct sizetype {int type;int val1;int val2; char* s1; char *s2;};
+/* 0: (no size defined) 1: SIZE  (A), 2: SIZE (A..B)*/
+
+
 typedef struct element element;
 
 typedef struct definition definition;
@@ -90,9 +94,18 @@ struct element
 			int low;
 			int high;
 			char * idlow;
-			char * id; /* high */
-			
+			char * id; /* high */		
 		} integ;
+		struct  {
+			char * IE_name;  /* 11: SEQUENCE OF */
+			element * link;
+			int type; /*0: no limit ,1: SIZE (A), 2:SIZE (A..B)*/
+			int low;
+			int high;
+			char * idlow;
+			char * idhigh; /* high */		
+			
+		} sequence_of ;
 	};
 
 };
