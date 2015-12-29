@@ -48,9 +48,12 @@ extern int web; /*Boolean to indicate if the compilation is done for cgi */
 int nb_error=0; /*number of non backward compatible errors*/
 int nb_warnings=0; /*number of non backward compatible errors*/
 
+/*declaration of print functions*/
 void showlines (int l1,int l2);
 void safe_print (char *s) ;
-
+void print_error (char * s,int l1, int l2);
+void print_warning (char * s,int l1, int l2);
+void print_error_4(char * s,int l1a, int l2a,int l1b, int l2b); 
 
 
 void add_BR () {
@@ -162,12 +165,7 @@ int para_def (definition * l1, definition * l2)
 {
 	if ((l1!=NULL)&&(l2!=NULL)) {
 		if ((l1->elem->type)!=(l2->elem->type)) {
-			printf ("ERROR: TYPE MISMATCH Line:%d %d\n",l1->line,l2->line);
-			add_BR ();
-			showlines (l1->line,l2->line);
-			printf ("\n");
-			add_BR();
-			nb_error++;
+			print_error ("ERROR: TYPE MISMATCH",l1->line,l2->line);
 			return (0);
 		}		
 		para_browse_element (l1->elem,l2->elem,-1,0,NULL,NULL);	
@@ -182,12 +180,7 @@ int para_browse_content_sequence ( sequence_content * sc1, sequence_content * sc
 	IE_chain * ic2;
 	if ((sc1==NULL)&&(sc2!=NULL)&&(op==1)) {	
 		if (print_warnings) {
-			fprintf (stdout,"Warning: Allowed non critical extension (SEQUENCE {} OP) line:%d %d \n",l1,l2);
-			add_BR();
-			showlines (l1,l2);
-			printf ("\n");
-			add_BR();
-			nb_warnings++;
+			print_warning ("Warning: Allowed non critical extension (SEQUENCE {} OP)",l1,l2);
 			new_branch_browse_content_sequence (sc2,1,l2);
 		}
 	return (0);
@@ -196,12 +189,7 @@ int para_browse_content_sequence ( sequence_content * sc1, sequence_content * sc
 		if (sc1->threedots ||  sc2->threedots ) {/*In case of Three Dots: special case */
 			tdflag=1;
 			if (sc1->threedots!=sc2->threedots) {
-				fprintf(stdout,"ERROR:  ... (extension) MISMATCH in a SEQUENCE line %d %d\n",l1,l2);
-				add_BR();
-				showlines (l1,l2);
-				printf ("\n");
-				add_BR();
-				nb_error++;
+				print_error("ERROR:  ... (extension) MISMATCH in a SEQUENCE",l1,l2);
 				return (1);
 			}
 			
@@ -209,21 +197,16 @@ int para_browse_content_sequence ( sequence_content * sc1, sequence_content * sc
 		else
 		{
 			if (sc1->optionality!=sc2->optionality) {			
-				fprintf(stdout,"ERROR:  OPTIONALITY MISMATCH line %d %d\n",sc1->elem->line,sc2->elem->line);
-				add_BR();
-				showlines (sc1->elem->line,sc2->elem->line);
-				printf ("\n");
-				add_BR();
-				nb_error++;
+				print_error("ERROR:  OPTIONALITY MISMATCH",sc1->elem->line,sc2->elem->line);
 				return (1);
 			}
 					
 			if (strcmp (sc1->ie_value_name,sc2->ie_value_name)) {
 				if (print_warnings) {
-					fprintf(stdout,"Warning: name mismatch %s %s line %d %d\n\n",sc1->ie_value_name,sc2->ie_value_name,sc1->elem->line,sc2->elem->line);
+					print_warning ("Warning: name mismatch in a SEQUENCE ",sc1->elem->line,sc2->elem->line);
 					add_BR();
 					add_BR();
-					nb_warnings++;
+\
 				}
 			}
 			IEChain1=add_IE2(IEChain1,sc1->ie_value_name);	
@@ -266,12 +249,7 @@ int para_browse_choice_content ( choice_content * cc1, choice_content *cc2,int l
 		if (cc1->threedots ||  cc2->threedots ) {/*In case of Three Dots: special case */
 			tdflag=1;
 			if (cc1->threedots!=cc2->threedots) {
-				fprintf(stdout,"ERROR:  ... (extension) MISMATCH in a CHOICE line %d %d\n",line1,line2); 
-				add_BR();
-				showlines (line1,line2);
-				printf ("\n");
-				add_BR();
-				nb_error++;
+				print_error("ERROR:  ... (extension) MISMATCH in a CHOICE",line1,line2); 
 				return (1);
 			}
 		}
@@ -280,9 +258,7 @@ int para_browse_choice_content ( choice_content * cc1, choice_content *cc2,int l
 			
 			if (strcmp (cc1->ie_value_name,cc2->ie_value_name)) {
 				if (print_warnings) {
-					fprintf(stdout,"Warning: name mismatch %s %s line %d %d\n",cc1->ie_value_name,cc2->ie_value_name,cc1->elem->line,cc2->elem->line);
-					add_BR();
-					nb_warnings++;
+					print_warning ("Warning: name mismatch in a CHOICE",cc1->elem->line,cc2->elem->line);
 				}
 			}		
 			IEChain1=add_IE2(IEChain1,cc1->ie_value_name);	
@@ -298,12 +274,7 @@ int para_browse_choice_content ( choice_content * cc1, choice_content *cc2,int l
 
 	}
 	if ((!tdflag)&&(!((cc1==NULL)&&(cc2==NULL)))) {
-		printf("ERROR: ONE OF THE 2 CHOICE IS TOO LONG line %d %d\n",line1,line2); 
-		add_BR();
-		showlines (line1,line2);
-		printf ("\n");
-		add_BR();
-		nb_error++;
+		print_error("ERROR: ONE OF THE 2 CHOICE IS TOO LONG",line1,line2); 
 	}
 	return (0);
 }
@@ -347,10 +318,7 @@ int i2;
 		if ((t1->type==10)&&(t2->type==10)) {
 			if (strcmp (t1->IE.IE_name,t2->IE.IE_name)) {
 				if (print_warnings) {
-					fprintf(stdout,"Warning: name mismatch %s %s\n\n",t1->IE.IE_name,t2->IE.IE_name);
-					add_BR ();
-					add_BR();
-					nb_warnings++;
+					print_warning ("Warning: NAME mismatch",line1,line2);
 				}
 			}
 		}
@@ -374,12 +342,9 @@ int i2;
 		if ((source==1)&&(t1->type==2)&&(t2->type!=2)) {
 		/*We check that we are in a CHOICE, that the old version has NULL and the new version not a NULL */
 			if (print_warnings) {
-				fprintf(stdout,"Warning Allowed critical extension in CHOICE with NULL line %d %d \n\n",t1->line,t2->line);
-				add_BR();
-				add_BR();
-				nb_warnings++;
-				new_branch_browse_element (t2,1,op);
+				print_warning("Warning Allowed critical extension in CHOICE with NULL",t1->line,t2->line);
 			}
+			new_branch_browse_element (t2,1,op);
 			IEChain1=remove_n_last_IE (IEChain1,icc1);
 			IEChain2=remove_n_last_IE (IEChain2,icc2);
 			return (0);			
@@ -391,40 +356,28 @@ int i2;
 		/*t1 is a SEQUENCE {}*/
 
 			if (print_warnings) {
-				fprintf(stdout,"Warning: SEQUENCE {} MP in a SEQUENCE line=%d %d\n\n",t1->line,t2->line);
-				add_BR();
-				add_BR();
-				nb_warnings++;
+				print_warning("Warning: SEQUENCE {} MP in a SEQUENCE",t1->line,t2->line);
 			}
 			
 		}
 		
 		
-		/* case of critical extention : SEQUENCE {} becomes CHOICE inside a CHOICE */
+		/* case of critical extension : SEQUENCE {} becomes CHOICE inside a CHOICE */
 		if ((op==0)&&(source==1)&&(t1->type==0)&&(t2->type==1)&&(t1->a==NULL)) {
 		/*source=1: it comes from a CHOICE */
 		/*t1 is a SEQUENCE {}*/
 		/*t2 is a CHOICE  */
-			if (print_warnings) fprintf(stdout,"Warning Allowed critical extension in a CHOICE line=%d %d\n\n",t1->line,t2->line);
+			if (print_warnings) print_warning("Warning Allowed critical extension in a CHOICE",t1->line,t2->line);
 			new_branch_browse_element (t2,1,op); 
 			IEChain1=remove_n_last_IE (IEChain1,icc1);
 			IEChain2=remove_n_last_IE (IEChain2,icc2);
-			add_BR();
-			add_BR();
-			nb_warnings++;
 
 			return (0);			
 		}
 		
 		if ((t1->type)!=(t2->type)) {
 			
-			fprintf (stdout,"ERROR: TYPE MISMATCH : line: %d %d (%d %d)\n",line1,line2,t1->line,t2->line);
-			add_BR();
-			showlines (line1,line2);
-			showlines (t1->line,t2->line);
-			printf ("\n");
-			add_BR();
-			nb_error++;
+			print_error_4 ("ERROR: TYPE MISMATCH",line1,line2,t1->line,t2->line);
 			IEChain1=remove_n_last_IE (IEChain1,icc1);
 			IEChain2=remove_n_last_IE (IEChain2,icc2);
 			return (1);
@@ -459,20 +412,12 @@ int i2;
 					if ((t1->string.link!=NULL)||(t2->string.link!=NULL)){
 						if (t1->string.link==NULL) {
 							if (print_warnings) {
-								fprintf (stdout,"Allowed extension in BITSTRING :line:%d %d\n\n",t1->line,t2->line);
-								add_BR();
-								add_BR();
-								nb_warnings++;
+								print_warning ("Allowed extension in BITSTRING",t1->line,t2->line);
 								new_branch_browse_element (t2->string.link,-1,op);
 							}
 						} else
 						{
-							fprintf (stdout,"ERROR: in BIT STRING :line:%d %d\n",t1->line,t2->line);
-							add_BR();
-							showlines (t1->line,t2->line);
-							printf ("\n");
-							add_BR();
-							nb_error++;
+							print_error ("ERROR: in BIT STRING",t1->line,t2->line);
 						}
 					}
 				}
@@ -488,20 +433,12 @@ int i2;
 					if ((t1->string.link!=NULL)||(t2->string.link!=NULL)){
 						if (t1->string.link==NULL) {
 							if (print_warnings) {
-								fprintf (stdout,"Allowed extension in OCTET STRING :line:%d %d\n\n",t1->line,t2->line);
-								add_BR();
-								add_BR();
-								nb_warnings++;
+								print_warning("Allowed extension in OCTET STRING",t1->line,t2->line);
 								new_branch_browse_element (t2->string.link,-1,op);
 							}
 						} else
 						{
-							fprintf (stdout,"ERROR: in OCTET STRING :line:%d %d\n",t1->line,t2->line);
-							add_BR();
-							showlines (t1->line,t2->line);
-							printf ("\n");
-							add_BR();
-							nb_error++;
+							print_error ("ERROR: in OCTET STRING ",t1->line,t2->line);
 						}
 					}
 				}
@@ -526,14 +463,7 @@ int i2;
 							ie2=ie2->nxt;
 					}
 					if (i1!=i2) {
-
-					fprintf(stdout,"ERROR: ENUMERATED: DEFAULT differs line: %d %d (%d %d)\n",line1,line2,t1->line,t2->line);
-					add_BR();
-					showlines (line1,line2);
-					showlines (t1->line,t2->line);
-					printf ("\n");
-					add_BR();
-					nb_error++;
+						print_error_4("ERROR: ENUMERATED: DEFAULT differs ",line1,line2,t1->line,t2->line);
 					break;	
 
 					
@@ -542,49 +472,27 @@ int i2;
 				
 				if ( ( (t2->enumer.val2)!= (t1->enumer.val2))) {
 					/*"..."  are not at the same position*/
-
-					fprintf(stdout,"ERROR: ENUMERATED: usage of ... differs line=%d %d\n",t1->line,t2->line);
-
-					add_BR();
-					showlines (t1->line,t2->line);
-					printf ("\n");
-					add_BR();
-					nb_error++;
+					print_error("ERROR: ENUMERATED: usage of ... differs",t1->line,t2->line);
 					break;	
 				}
 			
 				if ((t1->enumer.val1!=t2->enumer.val1)&&((t2->enumer.val2)==0)) {
 					/*number of item differs  */
-					fprintf(stdout,"ERROR: ENUMERATED: number of item differs line=%d %d\n",t1->line,t2->line);
-					add_BR();
-					showlines (t1->line,t2->line);
-					printf ("\n");
-					add_BR();
-					nb_error++;
+					print_error("ERROR: ENUMERATED: number of item differs ",t1->line,t2->line);
 					break;
 				}
 				
 				if ( ((t1->enumer.val1)!=(t2->enumer.val1)) && ((t2->enumer.val2)!=0)  ) {
 					/*"..." is used to extend the number of values */
 					if (print_warnings) {
-						fprintf(stdout,"WARNING: ENUMERATED: ... used to extend the number of elements line=%d %d\n",t1->line,t2->line);
-						add_BR();
-						showlines (t1->line,t2->line);
-						printf ("\n");
-						add_BR();
-						nb_warnings++;
+						print_warning("WARNING: ENUMERATED: ... used to extend the number of elements ",t1->line,t2->line);
 					}
 				}
 				
 				if ((1==t1->enumer.val1)&&(0==op) && (0==source)) {
 					/*"..." is used to extend the number of values */
 					if (print_warnings) {
-						fprintf(stdout,"WARNING: Mandatory ENUMERATED with 1 choice only line=%d %d\n",t1->line,t2->line);
-						add_BR();
-						showlines (t1->line,t2->line);
-						printf ("\n");
-						add_BR();
-						nb_warnings++;
+						print_warning ("WARNING: Mandatory ENUMERATED with 1 choice only ",t1->line,t2->line);
 					}
 				}
 				break;
@@ -593,23 +501,13 @@ int i2;
 			case 7 : { /* INTEGER */
 				if (t1->integ.type!=t2->integ.type) {
 					/*The two INTEGERS do not have the same type */
-					fprintf(stdout,"ERROR: INTEGER type mismatch line=%d %d\n",t1->line,t2->line);
-					add_BR();
-					showlines (t1->line,t2->line);
-					printf ("\n");
-					add_BR();
-					nb_error++;
+					print_error ("ERROR: INTEGER type mismatch ",t1->line,t2->line);
 					break;
 				}
 				
 				if  ((t1->integ.low!=t2->integ.low) || ((t1->integ.high!=t2->integ.high))) {
 					/*The two INTEGERS do not have the same limits */
-					fprintf(stdout,"ERROR: Two INTEGERS do not have the same limits line=%d %d\n",t1->line,t2->line);
-					add_BR();
-					showlines (t1->line,t2->line);
-					printf ("\n");
-					add_BR();
-					nb_error++;
+					print_error ("ERROR: Two INTEGERS do not have the same limits ",t1->line,t2->line);
 				}
 				break;
 			}
@@ -625,22 +523,14 @@ int i2;
 			case 11 : { /* SEQUENCE OF  */
 				if (t1->sequence_of.type!=t2->sequence_of.type) {
 					/*The two SIZE of SEQUENCE OF do not have the same type */
-					fprintf(stdout,"ERROR: SIZE type mismatch for SEQUENCE OF line=%d %d\n",t1->line,t2->line);
-					add_BR();
-					showlines (t1->line,t2->line);
-					printf ("\n");
-					add_BR();
-					nb_error++;
+					print_error ("ERROR: SIZE type mismatch for SEQUENCE OF ",t1->line,t2->line);
+					break;
 				}
 				
 				if  ((t1->sequence_of.low!=t2->sequence_of.low) || ((t1->sequence_of.high!=t2->sequence_of.high))) {
 					/*The two SIZE do not have the same limits */
-					fprintf(stdout,"ERROR: Two SIZE of SEQUENCE OF  do not have the same limits line=%d %d\n",t1->line,t2->line);
-					add_BR();
-					showlines (t1->line,t2->line);
-					printf ("\n");
-					add_BR();
-					nb_error++;
+					print_error ("ERROR: Two SIZE of SEQUENCE OF  do not have the same limits",t1->line,t2->line);
+
 				}
 				if ((t1->sequence_of.link!=NULL)&&(t2->sequence_of.link!=NULL)){
 					para_browse_element (t1->sequence_of.link, t2->sequence_of.link,-1,op,d1_str,d2_str);
@@ -845,6 +735,7 @@ int new_branch_browse_element (element *t2,int source, int op) {
 						printf ("\n");
 						add_BR();
 						nb_warnings++;
+						/* No call for print_warning because it is for 1 file only*/
 					}
 				}
 				break;
@@ -900,8 +791,36 @@ int new_branch_browse_choice_content (choice_content *cc2,int line2){
 
 /* Printing procedures*/
 
+void print_error (char * s,int l1, int l2) {
+	fprintf(stdout,"%s line=%d %d\n",s,l1,l2);
+	add_BR();
+	showlines (l1,l2);
+	printf ("\n");
+	add_BR();
+	nb_error++;
+}
+
+void print_warning (char * s,int l1, int l2) {
+	fprintf(stdout,"%s line=%d %d\n",s,l1,l2);
+	add_BR();
+	showlines (l1,l2);
+	printf ("\n");
+	add_BR();
+	nb_warnings++;
+}
+
+void print_error_4(char * s,int l1a, int l2a,int l1b, int l2b) {
+	fprintf(stdout,"%s line=%d %d (%d %d)\n",s,l1a,l2a,l1b,l2b);
+	add_BR();
+	showlines (l1a,l2a);
+	showlines (l1b,l2b);
+	printf ("\n");
+	add_BR();
+	nb_error++;
+}
+
 void safe_print (char*s) {
-//This function is used to print in case of online versio (CGI). It prevents malicious code to be executed.
+//This function is used to print in case of online version (CGI). It prevents malicious code to be executed.
 	char *t;
 	int i,l;
 	char c;
