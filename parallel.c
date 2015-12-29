@@ -170,7 +170,7 @@ int para_def (definition * l1, definition * l2)
 			nb_error++;
 			return (0);
 		}		
-		para_browse_element (l1->elem,l2->elem,-1,0);	
+		para_browse_element (l1->elem,l2->elem,-1,0,NULL,NULL);	
 	}	
 }
 
@@ -228,7 +228,7 @@ int para_browse_content_sequence ( sequence_content * sc1, sequence_content * sc
 			}
 			IEChain1=add_IE2(IEChain1,sc1->ie_value_name);	
 			IEChain2=add_IE2(IEChain2,sc2->ie_value_name);
-			para_browse_element (sc1->elem, sc2->elem,0,sc1->optionality);
+			para_browse_element (sc1->elem, sc2->elem,0,sc1->optionality,sc1->default_str,sc2->default_str);
 			IEChain1=remove_last_IE(IEChain1);
 			IEChain2=remove_last_IE(IEChain2);
 	
@@ -287,7 +287,7 @@ int para_browse_choice_content ( choice_content * cc1, choice_content *cc2,int l
 			}		
 			IEChain1=add_IE2(IEChain1,cc1->ie_value_name);	
 			IEChain2=add_IE2(IEChain2,cc2->ie_value_name);
-			para_browse_element (cc1->elem, cc2->elem,1,0);
+			para_browse_element (cc1->elem, cc2->elem,1,0,NULL,NULL);
 			IEChain1=remove_last_IE(IEChain1);
 			IEChain2=remove_last_IE(IEChain2);
 	
@@ -319,16 +319,22 @@ int para_browse_IE_Name (element *t1, element * t2){
 /* This function is never called */
 }
 
-int para_browse_element (element *t1, element *t2,int source,int op) {
+int para_browse_element (element *t1, element *t2,int source,int op,char * d1_str,char * d2_str) {
 /*source what is calling the function: 0:SEQUENCE, 1:CHOICE, -1:OTHER */
-/*op: optionality of the IE in case of a sequence : 0  Mandatory, 1 OPTIONAL 2 DEFAULT */
+/*op: optionality of the IE in case of a sequence : 0  Mandatory, 1 OPTIONAL, 2 DEFAULT (INTEGER), 3 DEFAULT ENUMERATED */
 /*This is used for the SEQUENCE {} OPTIONAL detection*/
+/* d1/2_str is the string of the DEFAULT element in case of ENUMERATED DEFAULT*/
 
 /*NOTE we have to add the possibility to remove uncoded parts like AccessStratumReleaseIndicator*/
 int line1;
 int line2;
 int icc1=0;
 int icc2=0;
+IE_chain * ie1;
+IE_chain * ie2;
+int i1;
+int i2;
+
 /* used to save the line of the first IE in case of the definition is done in another place */
 
 
@@ -446,7 +452,7 @@ int icc2=0;
 			case 4 : { /* BITSTRING  */
 
 				if ((t1->string.link!=NULL)&&(t2->string.link!=NULL)){
-					para_browse_element (t1->string.link, t2->string.link,-1,op);
+					para_browse_element (t1->string.link, t2->string.link,-1,op,d1_str,d2_str);
 					/*for the moment we only check the content*/
 				} else
 				{
@@ -475,7 +481,7 @@ int icc2=0;
 			
 			case 5 : { /* OCTETSTRING  */
 				if ((t1->string.link!=NULL)&&(t2->string.link!=NULL)){
-					para_browse_element (t1->string.link, t2->string.link,-1,op);
+					para_browse_element (t1->string.link, t2->string.link,-1,op,d1_str,d2_str);
 					/*for the moment we only check the content*/
 				} else
 		{
@@ -505,6 +511,35 @@ int icc2=0;
 			
 			
 			case 6 : { /* ENUMERATED */
+				if (3==op) {
+					/*Checks if DEFAULT values are the same*/	
+					i1=1; /* first element is number 1 */
+					ie1=t1->enumer.liste_enu;
+					while ((ie1!=NULL) &&(strcmp(ie1->name,d1_str))) {
+							i1++;
+							ie1=ie1->nxt;
+					}
+					i2=1;
+					ie2=t2->enumer.liste_enu;
+					while ((ie2!=NULL) &&(strcmp(ie2->name,d2_str))) {
+							i2++;
+							ie2=ie2->nxt;
+					}
+					if (i1!=i2) {
+
+					fprintf(stdout,"ERROR: ENUMERATED: DEFAULT differs line: %d %d (%d %d)\n",line1,line2,t1->line,t2->line);
+					add_BR();
+					showlines (line1,line2);
+					showlines (t1->line,t2->line);
+					printf ("\n");
+					add_BR();
+					nb_error++;
+					break;	
+
+					
+					}
+				}
+				
 				if ( ( (t2->enumer.val2)!= (t1->enumer.val2))) {
 					/*"..."  are not at the same position*/
 
@@ -583,7 +618,7 @@ int icc2=0;
 			/*I don't think this part is used because we try to resolve the links at the begining*/
 				para_browse_IE_Name ( t1,t2);
 				if ((t1->IE.link!=NULL)&& (t2->IE.link!=NULL)){
-					para_browse_element (t1->IE.link, t2->IE.link,-1,op);	
+					para_browse_element (t1->IE.link, t2->IE.link,-1,op,d1_str,d2_str);	
 				}
 				break;
 			}
@@ -608,7 +643,7 @@ int icc2=0;
 					nb_error++;
 				}
 				if ((t1->sequence_of.link!=NULL)&&(t2->sequence_of.link!=NULL)){
-					para_browse_element (t1->sequence_of.link, t2->sequence_of.link,-1,op);
+					para_browse_element (t1->sequence_of.link, t2->sequence_of.link,-1,op,d1_str,d2_str);
 					/*for the moment we only check the content*/
 				}
 				break;

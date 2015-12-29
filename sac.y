@@ -42,8 +42,31 @@ definition_ptr my_list2 = NULL;
 extern constant * constant_list;
 extern constant * constant_list1; 
 /* ------------------------------ */
+/*duplication of some IE_chain handling functions */
+IE_chain * add_IE3 (IE_chain * iec, char * c){
+	IE_chain * new_IE = NULL;
+	new_IE= malloc (sizeof (IE_chain));
+	new_IE->name=c;
+	new_IE->nxt=NULL;
+	if (iec==NULL) {
+		return new_IE;
+	}
+	else
+	{
+		IE_chain * temp=iec;
+		while (temp->nxt!=NULL)
+		{
+			temp=temp->nxt;		
+		}
+		temp->nxt=new_IE;
+		return iec;
+	}
+}
 
 
+
+
+/*********************************/
 element * new_element_SEQUENCE ( sequence_content * sc,int noline)
 {
 	element *tmp;
@@ -64,14 +87,14 @@ element * new_element_CHOICE ( choice_content * cc,int noline)
 	return (tmp);
 };
 
-element * new_element_ENUMERATED (int noenum, int indexdot,int noline )
+element * new_element_ENUMERATED (int noenum, int indexdot,IE_chain * iec,int noline )
 {
 	element *tmp;
 	tmp=malloc (sizeof(element));
 	tmp->type=6;
 	tmp->enumer.val1=noenum;
 	tmp->enumer.val2=indexdot;
-	
+	tmp->enumer.liste_enu=iec;
 	tmp->line=noline;
 	return (tmp);
 };
@@ -296,6 +319,16 @@ definition_ptr add_last (definition_ptr list, int l,char* s, element * elt )
 
 /* --------- Printing for debugging----------------*/
 
+void print_IE_chain_debug (IE_chain * iec,FILE *F) {
+	IE_chain *tmp=iec;
+	while (tmp!= NULL)
+	{
+		fprintf (F,"%s",tmp->name);
+		if (tmp->nxt!=NULL) fprintf (F,",");
+		tmp=tmp->nxt;
+	}
+}
+
 void print_constant (constant * co,FILE * F) {
 /*this function only print the list of constants in the File F*/
     constant *tmp = co;
@@ -381,7 +414,9 @@ void print_element (element  el,int offset, FILE *F)
 		}
 		
 		case 6 : { /* ENUMERATED */
-			fprintf (F,"ENUMERATED [%d,%d]",el.enumer.val1,el.enumer.val2); 
+			fprintf (F,"ENUMERATED {");
+			print_IE_chain_debug (el.enumer.liste_enu,F);
+			fprintf (F,"} #of elements:%d,position of extension mark: %d]",el.enumer.val1,el.enumer.val2);
 			break;
 		}
 		
@@ -524,13 +559,15 @@ void print_PDU (definition_ptr liste,FILE *F){
 void   browse_element (element  * elptr) ;
 /* added here for recursivity */
 
+
 void browse_content_sequence ( sequence_content  * liste)
 {	int i;
     sequence_content  *tmp = liste;
     while(tmp != NULL)
     { 
-		if (!tmp->threedots) /*In case of "three dots" elem is NULL */
+		if (!tmp->threedots) { 	/*In case of "three dots" elem is NULL */
 			browse_element (tmp->elem); 
+		}
 		tmp = tmp->nxt;
     }
 }
@@ -542,7 +579,6 @@ void browse_choice_sequence ( choice_content  * liste)
     {
 		if (!tmp->threedots) /*In case of "three dots" elem is NULL */
 			browse_element (tmp->elem); 
-
 		tmp = tmp->nxt;
     }
 }
@@ -629,7 +665,7 @@ void   browse_element (element * elptr)
 
 void the_big_link (definition_ptr liste)
 /* This goal of this function is to link the definitions and the names*/
-/* note for the moment, this has to be done on ma_list only*/
+/* note for the moment, this has to be done on my_list only*/
 /* the definition will be looked at in this list only */
 {
  definition *tmp = liste;
@@ -657,8 +693,9 @@ struct svtype sv;
 element * el_ptr ;
 sequence_content * sc_ptr; 
 choice_content * cc_ptr; 
-struct pairtype ppt;
+struct pairtype ppt;  /* To be removed */
 struct sizetype size_value;
+struct enum_struc enumeration;
 }
 
 /* the following token will give the name */
@@ -683,9 +720,10 @@ struct sizetype size_value;
 %type <sc_ptr> SequenceContent
 %type <sc_ptr> SequenceAssignList  SequenceAssign  SequenceAssignSingle
 %type <cc_ptr> ChoiceContent ChoiceAssignList    ChoiceAssignSeul
-%type <val> Defaultvalue   Enumarationcontent
-%type <ppt>  ListEnumeration 
+  
+%type <enumeration>  ListEnumeration 
 %type <size_value> size 
+%type <id> Enumarationcontent
 
 %start program /* the axiom of our grammar */
 %%
@@ -777,10 +815,18 @@ SequenceAssignList :
 SequenceAssign :
 	SequenceAssignSingle { $$= $1  ; }
 	|	SequenceAssignSingle _OPTIONAL { $1->optionality=1;$$= $1 ; } 
-	|	SequenceAssignSingle _DEFAULT Defaultvalue { $1->optionality=2;$1->default_value=$3;$$= $1; }
-/*	|	SequenceAssignSingle WithComponent { $$= $1  ; }  */
+/*	|	SequenceAssignSingle _DEFAULT Defaultvalue { $1->optionality=2;$1->default_value=$3.val;$1->default_str=$3.id;$$= $1; } */
+
+		|	SequenceAssignSingle _DEFAULT _ENTIER { $1->optionality=2;$1->default_value=$3;$1->default_str=NULL;$$= $1; }
+	
+		|	SequenceAssignSingle _DEFAULT _SMALLNAME { $1->optionality=3;$1->default_value=0;$1->default_str=$3.id;$$= $1; }
+		
+		|	SequenceAssignSingle _DEFAULT _HEIGHT_ONE { $1->optionality=2;$1->default_value=255;$1->default_str=NULL;$$= $1; }
+		/*This is a hack to handle the only case of DEFAULT with binary in ASN1 */
+		
+	
 	|	_SMALLNAME _BIGNAME WithComponent { $$= new_sequence_content ($1.id,new_element_IE_name ( $2.id,$2.val),0,0,0 )  ; } 
-	|	_THREEDOTS { $$= new_sequence_content ("",NULL,-1,0,1 )   ; } /*As it is a "Three Dots, only the last element is useful*/
+	|	_THREEDOTS { $$= new_sequence_content ("",NULL,-1,0,1 )   ; } /*As it is a "Three Dots", only the last element is useful*/
 ;
 
 
@@ -788,11 +834,9 @@ WithComponent :
 	_OPENP _WITH _COMPONENTS _OPENC  ListEnumeration _ABSENT _CLOSEC _CLOSEP 
 	/* Not treated in this version*/
 ;
-Defaultvalue :
-	_ENTIER {$$=$1;}
-	| _SMALLNAME  {$$=9999;}/* we will not handle the case DEFAULT Variable for now*/
-	| _HEIGHT_ONE {$$=9999;} /*This is a hack to handle the only case of DEFAULT with binary in ASN1 */
-;
+
+
+
 
 SequenceAssignSingle :
 	_SMALLNAME LeftPart  { $$= new_sequence_content ($1.id,$2,0,0,0 )   ; }
@@ -809,7 +853,7 @@ LeftPart :
 	|_INTEGER _OPENP _ENTIER  _CLOSEP {$$=new_element_INTEGER (1,0,$3,NULL,NULL,$1);}
 	|_INTEGER _OPENP _SMALLNAME  _CLOSEP {$$=new_element_INTEGER (1,0,0,NULL,$3.id,$1);}
 	
-	|_ENUMERATED _OPENC ListEnumeration _CLOSEC  {$$=new_element_ENUMERATED ($3.val1,$3.val2,$1);}
+	|_ENUMERATED _OPENC ListEnumeration _CLOSEC  {$$=new_element_ENUMERATED ($3.val1,$3.val2,$3.liste_enu,$1);}
 	
 	|_SEQUENCE _OPENC SequenceContent _CLOSEC { $$=new_element_SEQUENCE ($3,$1);}
 
@@ -856,15 +900,20 @@ octetstrings :
 
 ;
 
+
+
 ListEnumeration :
-	ListEnumeration _COMMA Enumarationcontent  {$$.val1=$1.val1+1;if ($3==1) $$.val2=$$.val1; }
-	| Enumarationcontent {$$.val1=1; $$.val2=0;if ($1==1) $$.val2=1; }
+	ListEnumeration _COMMA Enumarationcontent  {$$.val1=$1.val1+1;$$.liste_enu=add_IE3($1.liste_enu,$3);if (!strcmp($3,"...")) $$.val2=$$.val1; }
+	| Enumarationcontent {$$.val1=1; $$.val2=0;$$.liste_enu=add_IE3(NULL,$1);if (!strcmp($1,"...")) $$.val2=1;	}
 ;
 
 Enumarationcontent :
-	_SMALLNAME {$$=0;}
-	| _THREEDOTS {$$=1;}
+	_SMALLNAME {$$=$1.id;}
+	| _THREEDOTS {$$="...";}
 ;
+
+
+
 
 empty:
 ;

@@ -54,8 +54,9 @@ struct constant
 typedef struct sequence_content sequence_content;
 struct sequence_content
 {	char * ie_value_name;
-	int optionality; /*0: Mandatory, 1:OPTIONAL, 2: DEFAULT -1: N/A (in case of Three Dots for example*/
-	int default_value;
+	int optionality; /*0: Mandatory, 1:OPTIONAL, 2: DEFAULT integer, 3:DEFAULT for ENUMERATED, -1: N/A (in case of Three Dots for example*/
+	int default_value; /* for INTEGER */ 
+	char * default_str; /* for ENUMERATED */
 	element * elem;
 	sequence_content * nxt;
 	int threedots;
@@ -69,10 +70,23 @@ struct choice_content
 	int threedots;
 };
 
+typedef struct IE_chain  IE_chain;
+struct IE_chain
+{	char * name;
+	IE_chain * nxt;
+};
+
+struct enum_struc {
+	int val1;
+	int val2;
+	IE_chain * liste_enu; 	
+};
+
+
 struct element
 {
 	int type; /*0:SEQUENCE, 1: CHOICE, 2:NULL, 3:BOOLEAN, 4:BITSTRING, 5:OCTET STRING 
-			6:ENUMERATED, 7:INTEGER, 10:Identifier (name with upper case first letter) */
+			6:ENUMERATED, 7:INTEGER, 10:Identifier (name with upper case first letter) 11: SEQUENCE OF*/
 	int line;
 	union  {
 		sequence_content * a; /*0:SEQUENCE */
@@ -85,10 +99,15 @@ struct element
 			char * size;   /* 4: BITSTRING  or 5:OCTET STRING*/
 			element * link;
 		} string ;
-		struct pairtype enumer; /*for 6: ENUMERATED */
+		struct { /*for 6: ENUMERATED */
 		/* The first value is the number of enumerated. */
 		/* The second indicates the presence of "...": the value is the index of "..." in the list*/
 		/*     0 means absent */
+			int val1;
+			int val2;
+			IE_chain * liste_enu; 
+		}
+		enumer; 
 		struct { /*for 7: INTEGER type */
 			int type; /*0: no limit (not used in 25.331),1: INTEGER (A), 2:INTEGER (A..B)*/
 			int low;
@@ -110,9 +129,4 @@ struct element
 
 };
 
-typedef struct IE_chain  IE_chain;
-struct IE_chain
-{	char * name;
-	IE_chain * nxt;
-};
 
