@@ -189,10 +189,9 @@ int para_browse_content_sequence ( sequence_content * sc1, sequence_content * sc
 		if (sc1->threedots ||  sc2->threedots ) {/*In case of Three Dots: special case */
 			tdflag=1;
 			if (sc1->threedots!=sc2->threedots) {
-				print_error("ERROR:  ... (extension) MISMATCH in a SEQUENCE",l1,l2);
+				print_error("ERROR:  extension MISMATCH in a SEQUENCE",l1,l2);
 				return (1);
 			}
-			
 		}
 		else
 		{

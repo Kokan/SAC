@@ -51,6 +51,8 @@ void yyerror(const char * msg); /* defined in bison's file (.y) */
 ")" { return(_CLOSEP); }
 ".." {return (_DOTDOT);}
 "..." {return (_THREEDOTS);}
+"[[" {yylval.val=line_counter;return (_ODSB);}
+"]]" {yylval.val=line_counter;return (_CDSB);}
 [0-9]+ {yylval.val=atoi(yytext);return (_ENTIER);}
 "SIZE" {return (_SIZE) ;}
 "{"	{return (_OPENC) ; }

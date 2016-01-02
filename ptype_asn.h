@@ -60,6 +60,8 @@ struct sequence_content
 	element * elem;
 	sequence_content * nxt;
 	int threedots;
+	/*threedots is used to signal the presence of "...", [[ or ]]*/
+	/*1:"...", 2:[[, 3:]], 0:none of those */
 };
 
 typedef struct choice_content choice_content;

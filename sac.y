@@ -197,6 +197,7 @@ element * new_element_INTEGER ( int type, int low, int high,char *s1,char *s,int
 };
 
 sequence_content * new_sequence_content (char * s,element * el,int op, int def, int tdots )
+
 {
 	sequence_content * tmp;
 	tmp=malloc (sizeof(sequence_content));
@@ -483,8 +484,23 @@ void print_content_sequence ( sequence_content  * liste,int offset,FILE *F)
 		fprintf(F,"\n");
 		for (i=0;i<offset;i++) 
 			fprintf (F,"-");
-		if (tmp->threedots){ /*We need to take care of the case of "Three Dots" */
-			fprintf(F,"...");  
+		if (tmp->threedots){ /*We need to take care of the case of "Three Dots" and [[, ]] */
+			switch (tmp->threedots) {
+				case 1:{ 
+					fprintf(F,"...");
+					break;
+				}
+				case 2: {
+					fprintf(F,"[[");
+					break;
+				}
+				case 3: { 
+					fprintf(F,"]]");
+					break;
+				}
+
+
+			}
 		}
 		else
 		{
@@ -701,7 +717,7 @@ struct enum_struc enumeration;
 /* the following token will give the name */
 %token <sv> _BIGNAME  _SMALLNAME
 /* the following token will give the line number */
-%token <val> _ENTIER _SEQUENCE _NULL _BOOLEAN _INTEGER _ENUMERATED _BIT _OCTET _ASSIGN _CHOICE
+%token <val> _ENTIER _SEQUENCE _NULL _BOOLEAN _INTEGER _ENUMERATED _BIT _OCTET _ASSIGN _CHOICE _ODSB _CDSB
 
 %token _BEGIN _END 
 %token _SEMICOLON 
@@ -717,8 +733,9 @@ struct enum_struc enumeration;
 
 /* %type <id> AssignmentList   Assignment */ 
 %type <el_ptr> LeftPart octetstrings bitstrings
-%type <sc_ptr> SequenceContent
+%type <sc_ptr> SequenceContent SequenceAssignBlock SequenceAssignListWithinBlock
 %type <sc_ptr> SequenceAssignList  SequenceAssign  SequenceAssignSingle
+%type <sc_ptr> OpenDoubleSquareBrackets CloseDoubleSquareBrackets
 %type <cc_ptr> ChoiceContent ChoiceAssignList    ChoiceAssignSeul
   
 %type <enumeration>  ListEnumeration 
@@ -794,6 +811,7 @@ ChoiceContent :
 ChoiceAssignList :
 	ChoiceAssignList _COMMA ChoiceAssignSeul  { Add_an_element_in_Choice ($1,$3) ;  $$=$1;}
 	| ChoiceAssignSeul {$$=$1;}
+	
 ;
 
 ChoiceAssignSeul :
@@ -808,25 +826,46 @@ SequenceContent :
 ;
 
 SequenceAssignList :
-	SequenceAssignList _COMMA SequenceAssign  { add_a_new_sequence_element ($1,$3) ;  $$=$1;}
+	SequenceAssignList _COMMA SequenceAssignBlock  { add_a_new_sequence_element ($1,$3) ;  $$=$1;}
+	| SequenceAssignBlock  {$$=$1;}
+;
+
+SequenceAssignBlock :
+	 OpenDoubleSquareBrackets SequenceAssignListWithinBlock CloseDoubleSquareBrackets {
+		add_a_new_sequence_element ($2,$3);
+		add_a_new_sequence_element ($1,$2);
+		$$=$1;}
+	| SequenceAssign  {$$=$1;}
+
+;
+
+OpenDoubleSquareBrackets :
+	_ODSB { $$= new_sequence_content ("",NULL,-1,0,2 );}
+;
+
+CloseDoubleSquareBrackets :
+	_CDSB {$$= new_sequence_content ("",NULL,-1,0,3 );}
+;
+
+SequenceAssignListWithinBlock :
+	SequenceAssignListWithinBlock _COMMA SequenceAssign  { add_a_new_sequence_element ($1,$3) ;  $$=$1;}
 	| SequenceAssign  {$$=$1;}
 ;
+
+
 
 SequenceAssign :
 	SequenceAssignSingle { $$= $1  ; }
 	|	SequenceAssignSingle _OPTIONAL { $1->optionality=1;$$= $1 ; } 
-/*	|	SequenceAssignSingle _DEFAULT Defaultvalue { $1->optionality=2;$1->default_value=$3.val;$1->default_str=$3.id;$$= $1; } */
-
-		|	SequenceAssignSingle _DEFAULT _ENTIER { $1->optionality=2;$1->default_value=$3;$1->default_str=NULL;$$= $1; }
-	
-		|	SequenceAssignSingle _DEFAULT _SMALLNAME { $1->optionality=3;$1->default_value=0;$1->default_str=$3.id;$$= $1; }
-		
-		|	SequenceAssignSingle _DEFAULT _HEIGHT_ONE { $1->optionality=2;$1->default_value=255;$1->default_str=NULL;$$= $1; }
-		/*This is a hack to handle the only case of DEFAULT with binary in ASN1 */
-		
-	
+	|	SequenceAssignSingle _DEFAULT _ENTIER { $1->optionality=2;$1->default_value=$3;$1->default_str=NULL;$$= $1; }
+	|	SequenceAssignSingle _DEFAULT _SMALLNAME { $1->optionality=3;$1->default_value=0;$1->default_str=$3.id;$$= $1; }
+	|	SequenceAssignSingle _DEFAULT _HEIGHT_ONE { $1->optionality=2;$1->default_value=255;$1->default_str=NULL;$$= $1; }
+	/*This is a hack to handle the only case of DEFAULT with binary in 36.331'ASN1 */
 	|	_SMALLNAME _BIGNAME WithComponent { $$= new_sequence_content ($1.id,new_element_IE_name ( $2.id,$2.val),0,0,0 )  ; } 
 	|	_THREEDOTS { $$= new_sequence_content ("",NULL,-1,0,1 )   ; } /*As it is a "Three Dots", only the last element is useful*/
+/*	|	_ODSB { $$= new_sequence_content ("",NULL,-1,0,2 )   ; } */ 
+/*	|	_CDSB { $$= new_sequence_content ("",NULL,-1,0,3 )   ; } */ 
+	
 ;
 
 
