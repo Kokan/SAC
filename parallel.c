@@ -228,6 +228,12 @@ int para_browse_content_sequence ( sequence_content * sc1, sequence_content * sc
 
 		
 	}
+	/*checks the mew branch after the end of the first in case of extension*/
+	if ((tdflag)&&(sc2!=NULL)&&(sc1==NULL)) { 
+
+			new_branch_browse_content_sequence (sc2,1,l2);
+	}
+	
 	if ((!tdflag)&&(!((sc1==NULL)&&(sc2==NULL)))) {
 		printf("ERROR: ONE OF THE 2 SEQUENCE IS TOO LONG line:%d %d\n",l1,l2);
 		add_BR();
@@ -759,12 +765,13 @@ int new_branch_browse_content_sequence (sequence_content * sc2,int op, int l2){
 	IE_chain * ic2;
 
 	while (sc2!=NULL) {		
-	
-		IEChain2=add_IE2(IEChain2,sc2->ie_value_name);
-		new_branch_browse_element (sc2->elem,0,sc2->optionality);
-		IEChain2=remove_last_IE(IEChain2);
+
+		if (!(sc2->threedots)) {
+			IEChain2=add_IE2(IEChain2,sc2->ie_value_name);
+			new_branch_browse_element (sc2->elem,0,sc2->optionality);
+			IEChain2=remove_last_IE(IEChain2);
+		}
 		sc2=sc2->nxt;
-		
 	}
 	return (0);
 }
