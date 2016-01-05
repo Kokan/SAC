@@ -16,13 +16,10 @@
 /*    along with "Simple ASN.1 Checker".  If not, see <http://www.gnu.org/licenses/>.*/
 
 /*TO DO List: */
-/*print the lines in case of warnings */
-/*take "..." into account in ENUMERATED */
-/*manage [[ and ]]*/
 /*add line reference for "..." in a CHOICE */
 /*check that additions after "..." are done in the right order (more elements in the new file) */
 /*give the value of constant when they are the source of error*/
-
+/*give the line of the DEFAULT assignment for ENUMERATED*/
 
 #include <stdio.h>
 #include <string.h>
@@ -284,6 +281,75 @@ int para_browse_choice_content ( choice_content * cc1, choice_content *cc2,int l
 	return (0);
 }
 			
+int para_browse_enumerated ( element *t1, element *t2,int source,int op,char * d1_str,char * d2_str){
+	int i1,i2;
+	IE_chain * ie1;
+	IE_chain * ie2;
+	int line1;
+	int line2;
+	line1=t1->line;
+	line2=t2->line;
+	
+	if (3==op) {
+		/*Checks if DEFAULT values are the same*/	
+		i1=1; /* first element is number 1 */
+		ie1=t1->enumer.liste_enu;
+		while ((ie1!=NULL) &&(strcmp(ie1->name,d1_str))) {
+			i1++;
+			ie1=ie1->nxt;
+		}
+		i2=1;
+		ie2=t2->enumer.liste_enu;
+		while ((ie2!=NULL) &&(strcmp(ie2->name,d2_str))) {
+			i2++;
+			ie2=ie2->nxt;
+		}
+		if (i1!=i2) {
+			print_error_4("ERROR: ENUMERATED: DEFAULT differs ",line1,line2,t1->line,t2->line);
+		}
+	}
+				
+	if ( ( (t2->enumer.val2)!= (t1->enumer.val2))) {
+		/*"..."  are not at the same position*/
+		print_error("ERROR: ENUMERATED: usage of ... differs",t1->line,t2->line);
+		return (1);	
+	}
+			
+	if ((t1->enumer.val1!=t2->enumer.val1)&&((t2->enumer.val2)==0)) {
+		/*number of item differs  */
+		print_error("ERROR: ENUMERATED: number of item differs ",t1->line,t2->line);
+		return (1);	
+	}
+				
+	if ( ((t1->enumer.val1)!=(t2->enumer.val1)) && ((t2->enumer.val2)!=0)  ) {
+		/*"..." is used to extend the number of values */
+		if (print_warnings) {
+			print_warning("WARNING: ENUMERATED: ... used to extend the number of elements ",t1->line,t2->line);
+		}
+	}
+				
+	if ((1==t1->enumer.val1)&&(0==op) && (0==source)) {
+		if (print_warnings) {
+			print_warning ("WARNING: Mandatory ENUMERATED with 1 choice only ",t1->line,t2->line);
+		}
+	}
+
+
+	/*Checks if the name of elements have changed */	
+
+	ie1=t1->enumer.liste_enu;
+	ie2=t2->enumer.liste_enu;	
+	while ((ie1!=NULL) &&(ie2!=NULL)) {
+		if (strcmp(ie1->name,ie2->name)) {
+			if (print_warnings) {
+				printf("WARNING: ENUMERATED: change of name in the elements %s -> %s, line: %d %d \n\n",ie1->name,ie2->name,t1->line,t2->line);
+				add_BR (); add_BR ();
+			}
+		}
+		ie2=ie2->nxt;
+		ie1=ie1->nxt;
+	}	
+}	
 
 int para_browse_NULL ( ){
 }
@@ -453,53 +519,7 @@ int i2;
 			
 			
 			case 6 : { /* ENUMERATED */
-				if (3==op) {
-					/*Checks if DEFAULT values are the same*/	
-					i1=1; /* first element is number 1 */
-					ie1=t1->enumer.liste_enu;
-					while ((ie1!=NULL) &&(strcmp(ie1->name,d1_str))) {
-							i1++;
-							ie1=ie1->nxt;
-					}
-					i2=1;
-					ie2=t2->enumer.liste_enu;
-					while ((ie2!=NULL) &&(strcmp(ie2->name,d2_str))) {
-							i2++;
-							ie2=ie2->nxt;
-					}
-					if (i1!=i2) {
-						print_error_4("ERROR: ENUMERATED: DEFAULT differs ",line1,line2,t1->line,t2->line);
-					break;	
-
-					
-					}
-				}
-				
-				if ( ( (t2->enumer.val2)!= (t1->enumer.val2))) {
-					/*"..."  are not at the same position*/
-					print_error("ERROR: ENUMERATED: usage of ... differs",t1->line,t2->line);
-					break;	
-				}
-			
-				if ((t1->enumer.val1!=t2->enumer.val1)&&((t2->enumer.val2)==0)) {
-					/*number of item differs  */
-					print_error("ERROR: ENUMERATED: number of item differs ",t1->line,t2->line);
-					break;
-				}
-				
-				if ( ((t1->enumer.val1)!=(t2->enumer.val1)) && ((t2->enumer.val2)!=0)  ) {
-					/*"..." is used to extend the number of values */
-					if (print_warnings) {
-						print_warning("WARNING: ENUMERATED: ... used to extend the number of elements ",t1->line,t2->line);
-					}
-				}
-				
-				if ((1==t1->enumer.val1)&&(0==op) && (0==source)) {
-					/*"..." is used to extend the number of values */
-					if (print_warnings) {
-						print_warning ("WARNING: Mandatory ENUMERATED with 1 choice only ",t1->line,t2->line);
-					}
-				}
+				para_browse_enumerated ( t1, t2,source, op, d1_str, d2_str);
 				break;
 			}
 			
