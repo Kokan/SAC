@@ -161,10 +161,6 @@ void print_IE_chain (IE_chain * iec) {
 int para_def (definition * l1, definition * l2)
 {
 	if ((l1!=NULL)&&(l2!=NULL)) {
-		if ((l1->elem->type)!=(l2->elem->type)) {
-			print_error ("ERROR: TYPE MISMATCH",l1->line,l2->line);
-			return (0);
-		}		
 		para_browse_element (l1->elem,l2->elem,-1,0,NULL,NULL);	
 	}	
 }
