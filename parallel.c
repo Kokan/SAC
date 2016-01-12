@@ -228,12 +228,7 @@ int para_browse_content_sequence ( sequence_content * sc1, sequence_content * sc
 	}
 	
 	if ((!tdflag)&&(!((sc1==NULL)&&(sc2==NULL)))) {
-		printf("ERROR: ONE OF THE 2 SEQUENCE IS TOO LONG line:%d %d\n",l1,l2);
-		add_BR();
-		showlines (l1,l2);
-		printf ("\n");
-		add_BR();
-		nb_error++;
+		print_error("ERROR: ONE OF THE 2 SEQUENCE IS TOO LONG",l1,l2); 
 	}
 	return (0);
 }
