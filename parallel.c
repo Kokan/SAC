@@ -272,14 +272,13 @@ int para_browse_choice_content ( choice_content * cc1, choice_content *cc2,int l
 	return (0);
 }
 			
-int para_browse_enumerated ( element *t1, element *t2,int source,int op,char * d1_str,char * d2_str){
+int para_browse_enumerated ( element *t1, element *t2,int source,int op,char * d1_str,char * d2_str,int line1,int line2){
+/*line1 and line2 are the lines where the ENUMERATED is listed in the SEQUENCE*/
 	int i1,i2;
 	IE_chain * ie1;
 	IE_chain * ie2;
-	int line1;
-	int line2;
-	line1=t1->line;
-	line2=t2->line;
+
+
 	
 	if (3==op) {
 		/*Checks if DEFAULT values are the same*/	
@@ -361,6 +360,7 @@ int para_browse_element (element *t1, element *t2,int source,int op,char * d1_st
 /*NOTE we have to add the possibility to remove uncoded parts like AccessStratumReleaseIndicator*/
 int line1;
 int line2;
+/* used to save the line of the first IE in case of the definition is done in another place */
 int icc1=0;
 int icc2=0;
 IE_chain * ie1;
@@ -368,7 +368,7 @@ IE_chain * ie2;
 int i1;
 int i2;
 
-/* used to save the line of the first IE in case of the definition is done in another place */
+
 
 
 	if ((t1!=NULL)&&(t2!=NULL)) {
@@ -510,7 +510,7 @@ int i2;
 			
 			
 			case 6 : { /* ENUMERATED */
-				para_browse_enumerated ( t1, t2,source, op, d1_str, d2_str);
+				para_browse_enumerated ( t1, t2,source, op, d1_str, d2_str,line1,line2);
 				break;
 			}
 			
