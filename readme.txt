@@ -158,7 +158,7 @@ The output from the online version are the same as the command line version.
 3.1 List of Error Messages
 
 3.1.1 Extension MISMATCH in a SEQUENCE
-This error occurs when ASN.1 extension is not properly done in a SEQUENCE. It could be either caused by "...", "[[" or "]]". The line given in the error message is the beginning of the SEQUENCE.
+This error occurs when ASN.1 extension is not properly done in a SEQUENCE. It could be either caused by "...", "[[" or "]]". The lines given in the error message are the beginning of the SEQUENCE.
 
 example 1:
 File1:
@@ -294,7 +294,7 @@ file2:
 PDU-080::= ENUMERATED {e1,e2,e3}
 
 3.1.9 TYPE MISMATCH
-The types of IE don't match. The lines given in the error message are the line of the attribution and where it is actually defined.
+The types of IE don't match. The lines given in the error message are the lines of the attribution and where it is actually defined.
 
 example:
 file1:
