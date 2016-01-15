@@ -479,7 +479,7 @@ int i2;
 							}
 						} else
 						{
-							print_error ("ERROR: in BIT STRING",t1->line,t2->line);
+							print_error ("ERROR: ERROR in BIT STRING",t1->line,t2->line);
 						}
 					}
 				}
@@ -500,7 +500,7 @@ int i2;
 							}
 						} else
 						{
-							print_error ("ERROR: in OCTET STRING ",t1->line,t2->line);
+							print_error ("ERROR: ERROR in OCTET STRING ",t1->line,t2->line);
 						}
 					}
 				}
@@ -523,13 +523,13 @@ int i2;
 				
 				if  ((t1->integ.low!=t2->integ.low) || ((t1->integ.high!=t2->integ.high))) {
 					/*The two INTEGERS do not have the same limits */
-					print_error ("ERROR: Two INTEGERS do not have the same limits ",t1->line,t2->line);
+					print_error ("ERROR: Two INTEGERS don't have the same limits ",t1->line,t2->line);
 				}
 				break;
 			}
 
 			case 10 : { /* IE name */
-			/*I don't think this part is used because we try to resolve the links at the begining*/
+			/*I don't think this part is used because we try to resolve the links at the beginning*/
 				para_browse_IE_Name ( t1,t2);
 				if ((t1->IE.link!=NULL)&& (t2->IE.link!=NULL)){
 					para_browse_element (t1->IE.link, t2->IE.link,-1,op,d1_str,d2_str);	
@@ -545,7 +545,7 @@ int i2;
 				
 				if  ((t1->sequence_of.low!=t2->sequence_of.low) || ((t1->sequence_of.high!=t2->sequence_of.high))) {
 					/*The two SIZE do not have the same limits */
-					print_error ("ERROR: Two SIZE of SEQUENCE OF  do not have the same limits",t1->line,t2->line);
+					print_error ("ERROR: Two SIZEs of SEQUENCE OF  don't have the same limits",t1->line,t2->line);
 
 				}
 				if ((t1->sequence_of.link!=NULL)&&(t2->sequence_of.link!=NULL)){

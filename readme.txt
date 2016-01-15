@@ -152,3 +152,214 @@ File 2(line 5):FirstIE2 ::= BOOLEAN
 
 2.2 Online version
 The output from the online version are the same as the command line version.
+
+3 List of Error and Warning Messages
+
+3.1 List of Error Messages
+
+3.1.1 Extension MISMATCH in a SEQUENCE
+This error occurs when ASN.1 extension is not properly done in a SEQUENCE. It could be either caused by "...", "[[" or "]]". The line given in the error message is the beginning of the SEQUENCE.
+
+example 1:
+File1:
+PDU-010::= SEQUENCE {
+	a BOOLEAN
+}
+
+File 2:
+PDU-010::= SEQUENCE {
+	a BOOLEAN,
+	...
+}
+
+example 2:
+File1:
+PDU-011::= SEQUENCE {
+	a1 BOOLEAN,
+	...,
+  [[a2 BOOLEAN,
+	a3 BOOLEAN ]],
+	a4 BOOLEAN
+}
+
+File2:
+PDU-011::= SEQUENCE {
+	a1 BOOLEAN,
+	...,
+[[  a2 BOOLEAN,
+	a3 BOOLEAN,
+	a4 BOOLEAN]]
+}
+
+
+3.1.2 OPTIONALITY MISMATCH
+This error occurs when, in a SEQUENCE, elements have different optionality options. For example: OPTIONAL in one file and mandatory in the other one.
+ 
+example:
+File1:
+PDU-020::= SEQUENCE {
+	a BOOLEAN OPTIONAL
+}
+
+File 2:
+PDU-020::= SEQUENCE {
+	a BOOLEAN
+}
+
+3.1.3 ONE OF THE 2 SEQUENCE IS TOO LONG
+One of the SEQUENCEs has too many elements in one of the file. This error does not occur in case of extension with "...". The lines given in the error message are the beginning of the SEQUENCEs.
+
+File1:
+PDU-030::= SEQUENCE {
+	a1	BOOLEAN	
+}
+
+File 2:
+PDU-030::= SEQUENCE {
+	a1	BOOLEAN,
+	a2	BOOLEAN
+}
+
+3.1.4 ... (extension) MISMATCH in a CHOICE
+This error occurs when, in a CHOICE, the ASN.1 extension "..." are not at the same position in the two files.
+
+example:
+File1:
+PDU-040 ::= CHOICE {
+	a1 BOOLEAN,
+	a2 BOOLEAN,
+	...
+}
+
+File2:
+PDU-040 ::= CHOICE {
+	a1 BOOLEAN,
+	...,
+	a2 BOOLEAN
+}
+
+3.1.5 ONE OF THE 2 CHOICE IS TOO LONG
+One of the CHOICEs has too much elements in one of the file. This error does not occur in case of extension with "...". The lines given in the error message are the beginning of the CHOICE.
+
+example:
+file1:
+PDU-050 ::= CHOICE {
+	a1 BOOLEAN,
+	a2 BOOLEAN
+}
+
+file2:
+PDU-050 ::= CHOICE {
+	a1 BOOLEAN,
+	a2 BOOLEAN,
+	a3 BOOLEAN
+}
+
+3.1.6 ENUMERATED: DEFAULT differs
+The Default Values for ENUMERATED differ. The lines given in the error message are the line of the DEFAULT value attribution and the lines of the definition of the ENUMERATED.
+
+example:
+file1:
+PDU-060::= SEQUENCE {
+	a A-060  DEFAULT e1
+}
+
+A-060::= ENUMERATED {e1,e2}
+
+file2:
+PDU-060::= SEQUENCE {
+	a A-060  DEFAULT e2
+}
+
+A-060::= ENUMERATED {e1,e2}
+
+3.1.7 ENUMERATED: usage of ... differs
+The ASN.1 extension in ENUMERATED are not located at the same place in the two files.
+
+example:
+file1:
+PDU-070::= ENUMERATED {e1,...,e2}
+
+file2:
+PDU-070::= ENUMERATED {e1,e2,...}
+
+3.1.8 ENUMERATED: number of item differs
+The numbers of items in ENUMERATED are not the same in the two files.
+
+example:
+file1:
+PDU-080::= ENUMERATED {e1,e2}
+
+file2:
+PDU-080::= ENUMERATED {e1,e2,e3}
+
+3.1.9 TYPE MISMATCH
+The types of IE don't match. The lines given in the error message are the line of the attribution and where it is actually defined.
+
+example:
+file1:
+PDU-090::= A-0190
+A-090::=BOOLEAN
+
+file2:
+PDU-090::= A-0190
+A-090::=INTEGER
+
+3.1.10 ERROR in BIT STRING
+The BIT STRING definitions don't match.
+
+example:
+file1:
+PDU-100 ::= BIT STRING ( CONTAINING A-100)
+A-100::=BOOLEAN 
+
+file2:
+PDU-100 ::= BIT STRING 
+
+3.1.11 ERROR in OCTET STRING
+The OCTET STRING definitions don't match.
+
+example:
+file1:
+PDU-110 ::= OCTET STRING ( CONTAINING A-110)
+A-110::=BOOLEAN 
+
+file2:
+PDU-110 ::= OCTET STRING 
+
+3.1.12 INTEGER type mismatch
+The INTEGERs are not defined the same way.
+
+example:
+file1:
+PDU-120 ::= INTEGER (1..5)
+file2:
+PDU-120 ::= INTEGER  (10)
+
+3.1.13 Two INTEGERS don't have the same limits
+The INTEGERs don't have the same limits.
+
+example:
+file1:
+PDU-130 ::= INTEGER (1..5)
+file2:
+PDU-130 ::= INTEGER  (1..6)
+
+3.1.14 SIZE type mismatch for SEQUENCE OF
+The SEQUENCE OF are not defined the same way.
+
+example:
+file1:
+PDU-140 ::= SEQUENCE (SIZE (1..5)) OF BOOLEAN
+file2:
+PDU-140 ::= SEQUENCE (SIZE (5)) OF BOOLEAN
+
+
+3.1.15 Two SIZEs of SEQUENCE OF  don't have the same limits
+The SEQUENCE OF don't have the same limits
+
+example:
+file1:
+PDU-150 ::= SEQUENCE (SIZE (1..5)) OF BOOLEAN
+file2:
+PDU-150 ::= SEQUENCE (SIZE (1..6)) OF BOOLEAN
