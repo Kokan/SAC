@@ -354,7 +354,6 @@ PDU-140 ::= SEQUENCE (SIZE (1..5)) OF BOOLEAN
 file2:
 PDU-140 ::= SEQUENCE (SIZE (5)) OF BOOLEAN
 
-
 3.1.15 Two SIZEs of SEQUENCE OF  don't have the same limits
 The SEQUENCE OF don't have the same limits
 
@@ -363,3 +362,220 @@ file1:
 PDU-150 ::= SEQUENCE (SIZE (1..5)) OF BOOLEAN
 file2:
 PDU-150 ::= SEQUENCE (SIZE (1..6)) OF BOOLEAN
+
+
+
+
+
+
+
+3.2 List of Warning Messages
+
+3.2.1 Allowed non critical extension (SEQUENCE {} OP)
+This is used for non-critical extension of messages in 25.331 and 36.331.
+
+example:
+file1:
+PDUW-010::=SEQUENCE {
+	a	BOOLEAN,
+	noncriticalextension SEQUENCE {} OPTIONAL
+}
+
+file2:
+PDUW-010::=SEQUENCE {
+	a	BOOLEAN,
+	extension-W-010 Extension-W-010 OPTIONAL
+}
+
+Extension-W-010 ::= SEQUENCE {
+	b	BOOLEAN
+}
+
+3.2.2 Allowed critical extension in CHOICE with NULL
+This is an example of critical extension mechanism.
+
+example:
+file1:
+PDUW-020 ::= CHOICE {
+	a1 BOOLEAN,
+	a2 NULL
+}
+
+file2:
+PDUW-020 ::= CHOICE { 
+	a1 BOOLEAN,
+	a2 Extension-W-020
+}
+
+Extension-W-020::= INTEGER
+
+3.2.3 SEQUENCE {} MP in a SEQUENCE
+This mechanism has been used only in 25.331, in Rel-99, for some messages, in the "later-than-r3 " IE. When the "extension" is used (in Rel-4 or later), it causes also an error "TYPE MISMATCH" because it is not backward compatible.
+The part SEQUENCE {} is not encoded in ASN.1, because it is mandatory. 
+
+example:
+file1:
+PDUW-030 ::= SEQUENCE { 
+	a BOOLEAN,
+	criticalext SEQUENCE {}
+}
+
+file2:
+PDUW-030 ::= SEQUENCE { 
+	a BOOLEAN,
+	criticalext Criticalext-W-030
+}
+
+Criticalext-W-030::=SEQUENCE {
+	b BOOLEAN
+}
+
+3.2.4 Allowed critical extension in a CHOICE
+For this extension, SEQUENCE {} becomes CHOICE inside a CHOICE. It is used for critical extensions in 25.331 and 36.331.
+
+example:
+file1:
+PDUW-040 ::= CHOICE {
+	a BOOLEAN,
+	critical-extension SEQUENCE {}
+}
+
+file2:
+PDUW-040 ::= CHOICE { 
+	a BOOLEAN,
+	critical-extension Critical-extension-W-040 
+}
+
+Critical-extension-W-040 ::= CHOICE {
+	b1 BOOLEAN,
+	b2  INTEGER
+}
+
+3.2.5 Allowed extension in BITSTRING
+In the first file, the BITSTING does not make any reference, in the second file, the extension is named and used.
+
+example:
+file1:
+PDUW-050::= BIT STRING
+
+file2:
+PDUW-050::=BIT STRING (CONTAINING Bitstring-extension-W-050) 
+
+Bitstring-extension-W-050 ::= SEQUENCE {
+	b1	INTEGER,
+	b2  BOOLEAN
+}
+
+3.2.6 Allowed extension in OCTET STRING
+Same as before but with an octet string.
+
+example:
+file1:
+PDUW-060::= OCTET STRING
+
+file2:
+PDUW-060::=OCTET STRING (CONTAINING Bitstring-extension-W-060) 
+
+Bitstring-extension-W-060 ::= SEQUENCE {
+	b1	INTEGER,
+	b2  BOOLEAN
+}
+
+3.2.7 Name mismatch in a SEQUENCE
+The names of IE don't match in the two files.
+
+example:
+file1:
+PDUW-070::=SEQUENCE {
+	a BOOLEAN
+}
+
+file2:
+PDUW-070::=SEQUENCE {
+	b BOOLEAN
+}
+
+3.8.0 Name mismatch in a CHOICE
+The names of IE don't match in the two files.
+
+example:
+file1:
+PDUW-080::=CHOICE {
+	a1 BOOLEAN,
+	a2 INTEGER
+}
+
+file2:
+PDUW-080::=CHOICE {
+	b1 BOOLEAN,
+	a2 INTEGER
+}
+
+3.9.0 ENUMERATED: ... used to extend the number of elements
+The ASN.1 extension "..." has been used to extend the number of elements in an ENUMERATED.
+
+example:
+file1:
+PDUW-090::= SEQUENCE {
+	a ENUMERATED {e1,e2,...}
+}
+file2:
+PDUW-090::= SEQUENCE {
+	a ENUMERATED {e1,e2,...,e3}
+}
+
+3.10.0 NAME mismatch
+The names of an IE don't match in the two files.
+
+example:
+file1:
+PDUW-100::=Name-W-100
+Name-100::=BOOLEAN
+
+file2:
+PDUW-100::=OtherName-W-100
+OtherName-100::=BOOLEAN
+
+3.11.0 ENUMERATED: change of name in the elements
+The name of an element in an ENUMERATED has changed.
+
+example:
+file1:
+PDUW-110::=ENUMERATED {e1,e2}
+file2:
+PDUW-110::=ENUMERATED {a1,e2}
+
+3.12.0 Mandatory ENUMERATED with 1 choice only
+There is an ENUMERATED with only 1 element, with presence MANDATORY in a SEQUENCE. This is not encoded by ASN1. Note that in this case, there may not be any difference between the two files.
+
+example:
+file1:
+PDUW-120::=SEQUENCE {
+	a1	ENUMERATED {e1},
+	a2	BOOLEAN
+}
+file2:
+PDUW-120::=SEQUENCE {
+	a1	ENUMERATED {e1},
+	a2	BOOLEAN
+}
+
+3.13.0 Mandatory ENUMERATED with 1 choice only in the new branch
+In a new branch of a PDU in file2, there is an ENUMERATED with only 1 element, with presence MANDATORY in a SEQUENCE. This is not encoded by ASN1. This new branch is not present in file1 and can be for example a non-critical extension.
+
+example:
+file1:
+PDUW-130::=SEQUENCE {
+	a BOOLEAN,
+	non-critical-extension SEQUENCE {} OPTIONAL
+}
+file2:
+PDUW-130::=SEQUENCE {
+	a BOOLEAN,
+	non-critical-extension Extension-W-0130 OPTIONAL
+}
+
+Extension-W-0130 ::= SEQUENCE {
+	b1	ENUMERATED {e1},
+	b2	BOOLEAN
+}

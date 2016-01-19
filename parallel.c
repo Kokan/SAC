@@ -43,7 +43,7 @@ IE_chain * IEChain2=NULL;
 extern int web; /*Boolean to indicate if the compilation is done for cgi */
 
 int nb_error=0; /*number of non backward compatible errors*/
-int nb_warnings=0; /*number of non backward compatible errors*/
+int nb_warnings=0; /*number of warnings*/
 
 /*declaration of print functions*/
 void showlines (int l1,int l2);
@@ -404,7 +404,7 @@ int i2;
 		if ((source==1)&&(t1->type==2)&&(t2->type!=2)) {
 		/*We check that we are in a CHOICE, that the old version has NULL and the new version not a NULL */
 			if (print_warnings) {
-				print_warning("Warning Allowed critical extension in CHOICE with NULL",t1->line,t2->line);
+				print_warning("Warning: Allowed critical extension in CHOICE with NULL",t1->line,t2->line);
 			}
 			new_branch_browse_element (t2,1,op);
 			IEChain1=remove_n_last_IE (IEChain1,icc1);
@@ -429,7 +429,7 @@ int i2;
 		/*source=1: it comes from a CHOICE */
 		/*t1 is a SEQUENCE {}*/
 		/*t2 is a CHOICE  */
-			if (print_warnings) print_warning("Warning Allowed critical extension in a CHOICE",t1->line,t2->line);
+			if (print_warnings) print_warning("Warning: Allowed critical extension in a CHOICE",t1->line,t2->line);
 			new_branch_browse_element (t2,1,op); 
 			IEChain1=remove_n_last_IE (IEChain1,icc1);
 			IEChain2=remove_n_last_IE (IEChain2,icc2);
@@ -559,6 +559,7 @@ int i2;
 	if ((t1==NULL)||(t2==NULL))
 		if (print_warnings) { 
 			printf ("Warning(link): One of the element is empty\n\n");
+			/*Not clear when does this happen*/
 			add_BR();
 			add_BR();
 			nb_warnings++;
