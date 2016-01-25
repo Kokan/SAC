@@ -411,7 +411,50 @@ Extension-W-020::= INTEGER
 
 3.2.3 SEQUENCE {} MP in a SEQUENCE
 This mechanism has been used only in 25.331, in Rel-99, for some messages, in the "later-than-r3 " IE. When the "extension" is used (in Rel-4 or later), it causes also an error "TYPE MISMATCH" because it is not backward compatible.
-The part SEQUENCE {} is not encoded in ASN.1, because it is mandatory. 
+The part SEQUENCE {} is not encoded in ASN.1, because it is not OPTIONAL.
+This is present in the following messages:
+
+DL DCCH Messages:
+-----------------
+ActiveSetUpdate
+AssistanceDataDelivery
+CellChangeOrderFromUTRAN
+CellUpdateConfirm
+CounterCheck
+DownlinkDirectTransfer
+HandoverFromUTRANCommand-GSM
+HandoverFromUTRANCommand-CDMA2000
+MeasurementControl
+PhysicalChannelReconfiguration
+PhysicalSharedChannelAllocation
+RadioBearerReconfiguration
+RadioBearerRelease
+RadioBearerSetup
+RRCConnectionRelease
+SecurityModeCommand
+SignallingConnectionRelease
+TransportChannelReconfiguration
+UECapabilityEnquiry
+UECapabilityInformationConfirm
+UplinkPhysicalChannelControl
+URAUpdateConfirm
+UTRANMobilityInformation
+
+UL DCCH Messages
+----------------
+CellChangeOrderFromUTRANFailure
+
+DL CCCH Message
+---------------
+CellUpdateConfirm-CCCH
+RRCConnectionReject
+RRCConnectionRelease-CCCH
+RRCConnectionSetup
+URAUpdateConfirm-CCCH
+
+DL SHCCH Message
+----------------
+PhysicalSharedChannelAllocation
 
 example:
 file1:
@@ -495,7 +538,7 @@ PDUW-070::=SEQUENCE {
 	b BOOLEAN
 }
 
-3.8.0 Name mismatch in a CHOICE
+3.2.8 Name mismatch in a CHOICE
 The names of IE don't match in the two files.
 
 example:
@@ -511,7 +554,7 @@ PDUW-080::=CHOICE {
 	a2 INTEGER
 }
 
-3.9.0 ENUMERATED: ... used to extend the number of elements
+3.2.9 ENUMERATED: ... used to extend the number of elements
 The ASN.1 extension "..." has been used to extend the number of elements in an ENUMERATED.
 
 example:
@@ -524,7 +567,7 @@ PDUW-090::= SEQUENCE {
 	a ENUMERATED {e1,e2,...,e3}
 }
 
-3.10.0 NAME mismatch
+3.2.10 NAME mismatch
 The names of an IE don't match in the two files.
 
 example:
@@ -536,7 +579,7 @@ file2:
 PDUW-100::=OtherName-W-100
 OtherName-100::=BOOLEAN
 
-3.11.0 ENUMERATED: change of name in the elements
+3.2.11 ENUMERATED: change of name in the elements
 The name of an element in an ENUMERATED has changed.
 
 example:
@@ -545,7 +588,7 @@ PDUW-110::=ENUMERATED {e1,e2}
 file2:
 PDUW-110::=ENUMERATED {a1,e2}
 
-3.12.0 Mandatory ENUMERATED with 1 choice only
+3.2.12 Mandatory ENUMERATED with 1 choice only
 There is an ENUMERATED with only 1 element, with presence MANDATORY in a SEQUENCE. This is not encoded by ASN1. Note that in this case, there may not be any difference between the two files.
 
 example:
@@ -560,7 +603,7 @@ PDUW-120::=SEQUENCE {
 	a2	BOOLEAN
 }
 
-3.13.0 Mandatory ENUMERATED with 1 choice only in the new branch
+3.2.13 Mandatory ENUMERATED with 1 choice only in the new branch
 In a new branch of a PDU in file2, there is an ENUMERATED with only 1 element, with presence MANDATORY in a SEQUENCE. This is not encoded by ASN1. This new branch is not present in file1 and can be for example a non-critical extension.
 
 example:
