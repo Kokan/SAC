@@ -165,28 +165,31 @@ int simple_analyse () {
 }
 
 int cgi_version() {
-    char text_1[SIZE_1] = "";
-    char text_2[SIZE_2] = "";
-    char line_text[SIZE_TOTAL] = "";
-	char *tdecode = NULL;
+	char * text_1;
+	char * text_2;
+	char * postdata;
+	
+	//char *tdecode = NULL;
 	char s1[3];
 	char s2[3];
-	int i,l1,l2;
-	
+	int i,l,len;
+	char * len_;	
+
 	printf("Content-Type: text/html; charset=utf-8\n\n");
 	haut("ASN.1 parser");
+	
+	len_ = getenv("CONTENT_LENGTH");
+	len = strtol(len_, NULL, 10);
+	postdata = malloc(len + 1);
+	text_1=malloc (len+1);
+	text_2=malloc (len+1);
 
-	fgets(line_text, SIZE_TOTAL, stdin);
+	fgets(postdata, len + 1, stdin);
 	
-	// printf("DEBUG %s",line_text);
-	add_BR();
 	
-	tdecode = decode(line_text, line_text+SIZE_TOTAL);
-	// printf("DEBUG %s",tdecode);
-	add_BR();
 	
-	if(sscanf(tdecode, "IEChain=%3[^&]&Warnings=%3[^&]&file1=%2000000[^&]&file2=%2000000[^&]s", s1,s2,text_1, text_2) > 0) {
-		free(tdecode);
+	if(sscanf(postdata, "IEChain=%3[^&]&Warnings=%3[^&]&file1=%2500000[^&]&file2=%2500000[^&]s", s1,s2,text_1, text_2) > 0) {
+		free (postdata);
 		if(strlen(text_1) == 0 || strlen(text_2) == 0) {
 			printf("There was an error");
 		}
@@ -197,22 +200,24 @@ int cgi_version() {
 			if (strcmp (s1,"Yes")==0) {
 				showIEchain=1;
 			}
-			l1=strlen(text_1);
-			content1=malloc (l1+1);
-			strcpy (content1,text_1);
-			content1[l1]='\0';
-			
-			l2=strlen(text_2);
-			content2=malloc (l2+1);
-			strcpy (content2,text_2);
-			content2[l2]='\0';
-			
+			content1=decode(text_1,text_1+strlen(text_1));
+			content2=decode(text_2,text_2+strlen(text_2));
+			free(text_1);
+			free(text_2);	
 			printf("<p>Analysing</p> <BR>");
 			simple_analyse ();
+			free(content1);
+			free(content2);
+			
+
+
 		}
 	}
 	else
 	{
+		free (postdata);
+		free (text_1);
+		free (text_2);
 		printf ("An error occurred \n");
 		add_BR ();
 	}
