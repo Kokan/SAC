@@ -509,7 +509,7 @@ void print_content_sequence ( sequence_content  * liste,int offset,FILE *F)
 			if (tmp->optionality==1)
 				fprintf (F,"OPTIONAL ");
 			if (tmp->optionality==2)
-				fprintf (F,"DEFAULT %d",tmp->default_value,F);
+				fprintf (F,"DEFAULT %d",tmp->default_value);
 		}
        tmp = tmp->nxt;
     }
