@@ -17,6 +17,20 @@
 
 Simple ANS.1 Checker (SAC) - User Manual
 
+Table of Content:
+
+0.	Introduction
+1.	Installation and compilation
+1.1	Installation and compilation on Linux
+1.2	Installation on Windows
+2.	Usage
+2.1	Command Line
+2.2	Online version
+3.	List of Error and Warning Messages
+3.1 	List of Error Messages
+4. 	Macro for 36.331
+
+
 0. Introduction
 
 Simple ANS.1 Checker (SAC) is a software that compares two versions of the ASN.1 file of 3GPP TS 25.331 or 36.331 and checks the backward compatibility of the ASN.1 source files.
@@ -622,3 +636,32 @@ Extension-W-0130 ::= SEQUENCE {
 	b1	ENUMERATED {e1},
 	b2	BOOLEAN
 }
+
+4 Macro for 36.331
+This Word macro removes the non-ASN.1 text from 36.331.
+
+
+	Sub Extract()
+		Dim A As String
+		Dim B As String
+		Dim S As String
+		Dim x As Long
+		Dim y As Long
+		Dim z As Long
+    		Dim myRange As Range
+		Dim wholespec As String
+
+		z = 1
+		A = "-- ASN1START"
+		B = "-- ASN1STOP"
+		l = Len(A)
+		Set myRange = ActiveDocument.Range
+		wholespec = myRange.Text
+		Do Until z = 0
+			x = InStr(z, wholespec, A, vbTextCompare)
+			y = InStr(x, wholespec, B, vbTextCompare)
+			S = S + Mid$(wholespec, x + l, y - x - l)
+			z = InStr(y, wholespec, A, vbTextCompare)
+		Loop
+		ActiveDocument.Range.Text = S
+	End Sub
