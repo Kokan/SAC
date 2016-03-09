@@ -378,6 +378,23 @@ file2:
 PDU-150 ::= SEQUENCE (SIZE (1..6)) OF BOOLEAN
 
 
+3.1.16 ERROR: SIZE type mismatch for BITSTRING
+The BIT STRINGs are not defined the same way.
+
+example:
+file1:
+PDU-160 ::= BIT STRING  (SIZE (1..5)) 
+file2:
+PDU-160 ::= BIT STRING  (SIZE (5))
+
+3.1.17 ERROR: Two SIZEs of BITSTRING  don't have the same limits
+The size of BIT STRINGs don't have the same limits
+
+example:
+file1:
+PDU-170 ::= BIT STRING (SIZE (1..5)) 
+file2:
+PDU-170 ::= BIT STRING  (SIZE (1..6)) 
 
 
 

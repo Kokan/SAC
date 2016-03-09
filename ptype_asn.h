@@ -97,9 +97,13 @@ struct element
 			char * IE_name;  /* 10: Identifier */
 			element * link;
 		} IE ;
-		struct  {
-			char * size;   /* 4: BITSTRING  or 5:OCTET STRING*/
+		struct  {  /* 4: BITSTRING  or 5:OCTET STRING*/
 			element * link;
+			int type; /*0: no limit ,1: SIZE (A), 2:SIZE (A..B)*/
+			int low;
+			int high;
+			char * idlow;
+			char * idhigh; /* high */		
 		} string ;
 		struct { /*for 6: ENUMERATED */
 		/* The first value is the number of enumerated. */

@@ -41,6 +41,8 @@ definition_ptr my_list2 = NULL;
 /*We will store the constants in this list*/ 
 extern constant * constant_list;
 extern constant * constant_list1; 
+
+
 /* ------------------------------ */
 /*duplication of some IE_chain handling functions */
 IE_chain * add_IE3 (IE_chain * iec, char * c){
@@ -160,14 +162,34 @@ element * new_element_sequence_of_with_size (element* el ,int noline,struct size
 };
 
 
-element * new_element_BITSTRING ( element *el,char * s, int noline)
+element * new_element_BITSTRING ( element *el, int noline)
 {
 	element *tmp;
 	tmp=malloc (sizeof(element));
 	tmp->type=4;
-	tmp->string.size = s;
-	tmp->string.link=el;
 	tmp->line=noline;
+	tmp->string.link=el;
+	tmp->string.type=0;
+	tmp->string.low=-1;
+	tmp->string.high=-1;
+	tmp->string.idlow=NULL;
+	tmp->string.idhigh=NULL;
+	return (tmp);
+};
+
+element * new_element_BITSTRING_with_size ( element *el,struct sizetype size, int noline)
+{
+	element *tmp;
+	tmp=malloc (sizeof(element));
+	tmp->type=4;
+	tmp->line=noline;
+
+	tmp->string.link=el;
+	tmp->string.type=size.type;
+	tmp->string.low=size.val1;
+	tmp->string.high=size.val2;
+	tmp->string.idlow=size.s1;
+	tmp->string.idhigh=size.s2;
 	return (tmp);
 };
 
@@ -176,7 +198,7 @@ element * new_element_OCTETSTRING ( element *el,char * s,int noline)
 	element *tmp;
 	tmp=malloc (sizeof(element));
 	tmp->type=5;
-	tmp->string.size = s;
+
 	tmp->string.link=el;
 	tmp->line=noline;
 	return (tmp);
@@ -616,6 +638,20 @@ void   browse_element (element * elptr)
 		}
 		
 		case 4 : { /* BITSTRING */
+
+			if (elptr->string.type!=0) {
+				if (elptr->string.idlow!=NULL) {
+					elptr->string.low=find_value(elptr->string.idlow,constant_list);
+					if (verbose) fprintf(Logfile,"Constant Assignment for SIZE in BIT STRING  %s=%d\n",elptr->string.idlow,elptr->string.low);
+				}			
+			
+				if (elptr->string.idhigh!=NULL) {
+					elptr->string.high=find_value(elptr->string.idhigh,constant_list);
+					if (verbose) fprintf(Logfile,"Constant Assignment for SIZE in BIT STRING  %s=%d\n",elptr->string.idhigh,elptr->string.high);
+				}
+			}
+		
+		
 			if (elptr->string.link!=NULL) {
 				browse_element (elptr->string.link);
 			}
@@ -901,7 +937,7 @@ LeftPart :
 	|_SEQUENCE  _OF LeftPart {$$=new_element_sequence_of ($3,$1);}
 
 	|_CHOICE  _OPENC ChoiceContent _CLOSEC {$$=new_element_CHOICE ($3,$1);}
-	| _BIT _STRING bitstrings {$$=new_element_BITSTRING($3,"",$1);}
+	|  bitstrings {$$=$1;}
 	| _OCTET _STRING octetstrings {$$=new_element_OCTETSTRING($3,"",$1);}
 	| _NULL {$$=new_element_NULL ($1);}
 ;
@@ -916,11 +952,15 @@ size :
 	
 
 bitstrings :
-		 {$$=NULL;} /*Note this is the case of a element pointer to NULL is generated*/
-	|	 size	 {$$=NULL;} /* idem */
-	|	_OPENC binarycontent  _CLOSEC _OPENP _SIZE _OPENP _ENTIER _CLOSEP _CLOSEP {$$=NULL;} /* idem */
-	|	_OPENP _CONTAINING _BIGNAME _CLOSEP {$$=new_element_IE_name ( $3.id,$3.val);
-									 }
+		_BIT _STRING 				{$$=new_element_BITSTRING (NULL,$1);} 
+	|	_BIT _STRING size			{$$=new_element_BITSTRING_with_size(NULL,$3,$1); } 
+	|	_BIT _STRING _OPENC binarycontent  _CLOSEC size
+									{$$=new_element_BITSTRING_with_size(NULL,$6,$1);} /* binary content is ignored */
+	|	_BIT _STRING _OPENP _CONTAINING _BIGNAME _CLOSEP 
+									{element *IE_Temp;
+									IE_Temp=new_element_IE_name ( $5.id,$5.val);
+									$$=new_element_BITSTRING(IE_Temp,$1);			
+									}
 ;
 
 binarycontent :

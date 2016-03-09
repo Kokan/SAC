@@ -179,6 +179,7 @@ int para_browse_content_sequence ( sequence_content * sc1, sequence_content * sc
 	return (0);
 	}
 	while ((sc1!=NULL)&&(sc2!=NULL)) {		
+
 		if (sc1->threedots ||  sc2->threedots ) {/*In case of Three Dots: special case */
 			tdflag=1;
 			if (sc1->threedots!=sc2->threedots) {
@@ -225,6 +226,7 @@ int para_browse_content_sequence ( sequence_content * sc1, sequence_content * sc
 	if ((tdflag)&&(sc2!=NULL)&&(sc1==NULL)) { 
 
 			new_branch_browse_content_sequence (sc2,1,l2);
+
 	}
 	
 	if ((!tdflag)&&(!((sc1==NULL)&&(sc2==NULL)))) {
@@ -376,6 +378,8 @@ int i2;
 		line1=t1->line;
 		line2=t2->line;
 		
+
+		
 		/*Test if the names are the same */
 		if ((t1->type==10)&&(t2->type==10)) {
 			if (strcmp (t1->IE.IE_name,t2->IE.IE_name)) {
@@ -466,9 +470,22 @@ int i2;
 			
 			case 4 : { /* BITSTRING  */
 
+				if (t1->string.type!=t2->string.type) { 
+					/*The two SIZE of BIT STRING do not have the same type */
+					print_error ("ERROR: SIZE type mismatch for BITSTRING ",t1->line,t2->line);
+					break;
+				}
+				
+				if  ((t1->string.low!=t2->string.low) || ((t1->string.high!=t2->string.high))) {
+					/*The two SIZE do not have the same limits */
+					print_error ("ERROR: Two SIZEs of BITSTRING  don't have the same limits",t1->line,t2->line);
+
+				}
+				
+				
 				if ((t1->string.link!=NULL)&&(t2->string.link!=NULL)){
 					para_browse_element (t1->string.link, t2->string.link,-1,op,d1_str,d2_str);
-					/*for the moment we only check the content*/
+
 				} else
 				{
 					if ((t1->string.link!=NULL)||(t2->string.link!=NULL)){
@@ -550,7 +567,7 @@ int i2;
 				}
 				if ((t1->sequence_of.link!=NULL)&&(t2->sequence_of.link!=NULL)){
 					para_browse_element (t1->sequence_of.link, t2->sequence_of.link,-1,op,d1_str,d2_str);
-					/*for the moment we only check the content*/
+
 				}
 				break;
 			}
@@ -566,6 +583,7 @@ int i2;
 		}
 	IEChain1=remove_n_last_IE (IEChain1,icc1);
 	IEChain2=remove_n_last_IE (IEChain2,icc2);
+
 }
 
 void browse_PDUpara (definition_ptr liste1, definition_ptr liste2){
@@ -701,14 +719,14 @@ int new_branch_browse_element (element *t2,int source, int op) {
 		line2=t2->line;
 
 		/* Resolve IE_NAME-> Definition */ 
-		while ((t2->type==10)&&(t2->IE.link!=NULL))  {
+		while ((t2->type==10)&&(t2->IE.link!=NULL)) 
+		{
 			IEChain2=add_IE2 (IEChain2,t2->IE.IE_name);
 			icc2++;
 			t2=t2->IE.link;
 		}
 
 
-		/* printf (" TYPE: %d ",el.type); */
 		switch (t2->type) {
 			case 0 : { /* SEQUENCE */
 				new_branch_browse_content_sequence ( t2->a,op,t2->line);
@@ -721,6 +739,7 @@ int new_branch_browse_element (element *t2,int source, int op) {
 			}
 
 			case 4 : { /* BITSTRING  */
+
 				if (t2->string.link!=NULL){
 					new_branch_browse_element (t2->string.link,-1,op);
 				} 
@@ -728,6 +747,7 @@ int new_branch_browse_element (element *t2,int source, int op) {
 			}
 			
 			case 5 : { /* OCTETSTRING  */
+
 				if (t2->string.link!=NULL){
 					new_branch_browse_element (t2->string.link,-1,op);
 				} 
@@ -758,13 +778,16 @@ int new_branch_browse_element (element *t2,int source, int op) {
 				break;
 			}
 			case 11 : { /* SEQUENCE OF  */
+
 				if (t2->sequence_of.link!=NULL){
-					new_branch_browse_element (t2->string.link,-1,op);
+					new_branch_browse_element (t2->sequence_of.link,-1,op);
 				} 
+
 				break;
 			}
 		}
 	}	
+
 	IEChain2=remove_n_last_IE (IEChain2,icc2);
 }
 
@@ -793,9 +816,12 @@ int new_branch_browse_choice_content (choice_content *cc2,int line2){
 
 	IE_chain * ic2;
 	while (cc2!=NULL) {		
-		IEChain2=add_IE2(IEChain2,cc2->ie_value_name);
-		new_branch_browse_element (cc2->elem,1,0);
-		IEChain2=remove_last_IE(IEChain2);
+
+		if (!(cc2->threedots)) {
+			IEChain2=add_IE2(IEChain2,cc2->ie_value_name);
+			new_branch_browse_element (cc2->elem,1,0);
+			IEChain2=remove_last_IE(IEChain2);
+		}
 		cc2=cc2->nxt;
 	}
 	return (0);
