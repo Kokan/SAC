@@ -193,14 +193,36 @@ element * new_element_BITSTRING_with_size ( element *el,struct sizetype size, in
 	return (tmp);
 };
 
-element * new_element_OCTETSTRING ( element *el,char * s,int noline)
+element * new_element_OCTETSTRING ( element *el,int noline)
 {
 	element *tmp;
 	tmp=malloc (sizeof(element));
 	tmp->type=5;
+	tmp->line=noline;
+	
+	tmp->string.link=el;
+	tmp->string.type=0;
+	tmp->string.low=-1;
+	tmp->string.high=-1;
+	tmp->string.idlow=NULL;
+	tmp->string.idhigh=NULL;
+
+	return (tmp);
+};
+
+element * new_element_OCTETSTRING_with_size ( element *el,struct sizetype size, int noline)
+{
+	element *tmp;
+	tmp=malloc (sizeof(element));
+	tmp->type=5;
+	tmp->line=noline;
 
 	tmp->string.link=el;
-	tmp->line=noline;
+	tmp->string.type=size.type;
+	tmp->string.low=size.val1;
+	tmp->string.high=size.val2;
+	tmp->string.idlow=size.s1;
+	tmp->string.idhigh=size.s2;
 	return (tmp);
 };
 
@@ -390,6 +412,29 @@ void print_size_sequence_of (element el, FILE * F) {
 	}
 } 
 
+void print_size_STRING (element el, FILE * F) {
+	switch (el.string.type) {
+		case 0 : {
+		break;
+		}
+		case 1 : { /* SIZE (A) */
+ 		if (el.string.high!=-1) fprintf (F,"(SIZE(%d))",el.string.high);
+			else  fprintf (F,"SIZE(%s)",el.string.idhigh);
+		break;
+		}
+		case 2 : { /* SIZE (A..B) */
+		fprintf (F,"(SIZE(");
+ 		if (el.string.low!=-1) fprintf (F,"%d..",el.string.low);
+			else  fprintf (F,"%s..",el.string.idlow);
+		if (el.string.high!=-1) fprintf (F,"%d",el.string.high);
+			else  fprintf (F,"%s",el.string.idhigh);
+		fprintf (F,"))");
+		break;
+		}
+	}
+} 
+
+
 void print_element (element  el,int offset, FILE *F)
 {
 	int i;
@@ -415,7 +460,9 @@ void print_element (element  el,int offset, FILE *F)
 		
 		
 		case 4 : { /* BITSTRING */
+
 			fprintf (F,"BITSTRING "); 
+			print_size_STRING (el,F);
 			if (el.string.link!=NULL) {
 				fprintf (F,"CONTAINING\n");
 				for (i=0;i<offset;i++) 
@@ -426,7 +473,9 @@ void print_element (element  el,int offset, FILE *F)
 		}
 
 		case 5 : { /* OCTET STRING */
+
 			fprintf (F,"OCTETSTRING "); 
+			print_size_STRING (el,F);
 			if (el.string.link!=NULL) {
 				fprintf (F,"CONTAINING\n");
 				for (i=0;i<offset;i++) 
@@ -659,6 +708,22 @@ void   browse_element (element * elptr)
 		}
 		
 		case 5 : { /* OCTETSTRING */
+			
+			if (elptr->string.type!=0) {
+				if (elptr->string.idlow!=NULL) {
+					elptr->string.low=find_value(elptr->string.idlow,constant_list);
+					if (verbose) fprintf(Logfile,"Constant Assignment for SIZE in OCTET STRING  %s=%d\n",elptr->string.idlow,elptr->string.low);
+				}			
+			
+				if (elptr->string.idhigh!=NULL) {
+					elptr->string.high=find_value(elptr->string.idhigh,constant_list);
+					if (verbose) fprintf(Logfile,"Constant Assignment for SIZE in OCTET STRING  %s=%d\n",elptr->string.idhigh,elptr->string.high);
+				}
+			}
+
+			
+			
+			
 			if (elptr->string.link!=NULL) {
 				browse_element (elptr->string.link);
 			}
@@ -938,7 +1003,7 @@ LeftPart :
 
 	|_CHOICE  _OPENC ChoiceContent _CLOSEC {$$=new_element_CHOICE ($3,$1);}
 	|  bitstrings {$$=$1;}
-	| _OCTET _STRING octetstrings {$$=new_element_OCTETSTRING($3,"",$1);}
+	| octetstrings {$$=$1;}
 	| _NULL {$$=new_element_NULL ($1);}
 ;
 
@@ -973,11 +1038,18 @@ bit :
 ;
 
 octetstrings : 
-		  {$$=NULL;} /*Note this is the case of a element pointer to NULL is generated*/
-	|	  size {$$=NULL; }
-	| 	  _OPENP _CONTAINING _BIGNAME _CLOSEP {$$=new_element_IE_name ( $3.id,$3.val);}
-
+		_OCTET _STRING 				{$$=new_element_OCTETSTRING (NULL,$1);} 
+	|	_OCTET _STRING size			{$$=new_element_OCTETSTRING_with_size(NULL,$3,$1); } 
+	|	_OCTET _STRING _OPENP _CONTAINING _BIGNAME _CLOSEP 
+									{element *IE_Temp;
+									IE_Temp=new_element_IE_name ( $5.id,$5.val);
+									$$=new_element_OCTETSTRING(IE_Temp,$1);			
+									}
 ;
+
+
+
+
 
 
 

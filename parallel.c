@@ -504,6 +504,23 @@ int i2;
 			}
 			
 			case 5 : { /* OCTETSTRING  */
+			
+				if (t1->string.type!=t2->string.type) { 
+					/*The two SIZE of BIT STRING do not have the same type */
+					print_error ("ERROR: SIZE type mismatch for OCTET STRING ",t1->line,t2->line);
+					break;
+				}
+				
+				if  ((t1->string.low!=t2->string.low) || ((t1->string.high!=t2->string.high))) {
+					/*The two SIZE do not have the same limits */
+					print_error ("ERROR: Two SIZEs of OCTET STRING  don't have the same limits",t1->line,t2->line);
+
+				}			
+			
+			
+			
+			
+			
 				if ((t1->string.link!=NULL)&&(t2->string.link!=NULL)){
 					para_browse_element (t1->string.link, t2->string.link,-1,op,d1_str,d2_str);
 					/*for the moment we only check the content*/
