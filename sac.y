@@ -838,6 +838,8 @@ struct enum_struc enumeration;
 %type <sc_ptr> SequenceAssignList  SequenceAssign  SequenceAssignSingle
 %type <sc_ptr> OpenDoubleSquareBrackets CloseDoubleSquareBrackets
 %type <cc_ptr> ChoiceContent ChoiceAssignList    ChoiceAssignSeul
+%type <cc_ptr> ChoiceAssignBlock   OpenDoubleSquareBracketsChoice 
+%type <cc_ptr> CloseDoubleSquareBracketsChoice ChoiceAssignListWithinBlock 
   
 %type <enumeration>  ListEnumeration 
 %type <size_value> size 
@@ -910,9 +912,30 @@ ChoiceContent :
 ;
 
 ChoiceAssignList :
-	ChoiceAssignList _COMMA ChoiceAssignSeul  { Add_an_element_in_Choice ($1,$3) ;  $$=$1;}
-	| ChoiceAssignSeul {$$=$1;}
-	
+	ChoiceAssignList _COMMA ChoiceAssignBlock  { Add_an_element_in_Choice ($1,$3) ;  $$=$1;}
+	| ChoiceAssignBlock {$$=$1;}
+/*	| ChoiceAssignSeul {$$=$1;} */	
+;
+
+ChoiceAssignBlock :
+	 OpenDoubleSquareBracketsChoice ChoiceAssignListWithinBlock CloseDoubleSquareBracketsChoice {
+		Add_an_element_in_Choice  ($2,$3);
+		Add_an_element_in_Choice  ($1,$2);
+		$$=$1;}
+	| ChoiceAssignSeul  {$$=$1;}
+;
+
+OpenDoubleSquareBracketsChoice :
+	_ODSB { $$= new_choice_content ("",NULL,2 );} /* we use the tdots parameter to code the opening of double brackets */
+;
+
+CloseDoubleSquareBracketsChoice :
+	_CDSB {$$= new_choice_content ("",NULL,3 );} /* we use the tdots parameter to code the closing of double brackets  */
+;
+
+ChoiceAssignListWithinBlock :
+	ChoiceAssignListWithinBlock _COMMA ChoiceAssignSeul  { Add_an_element_in_Choice ($1,$3) ;  $$=$1;}
+	| ChoiceAssignSeul  {$$=$1;}
 ;
 
 ChoiceAssignSeul :
@@ -937,7 +960,6 @@ SequenceAssignBlock :
 		add_a_new_sequence_element ($1,$2);
 		$$=$1;}
 	| SequenceAssign  {$$=$1;}
-
 ;
 
 OpenDoubleSquareBrackets :
@@ -952,8 +974,6 @@ SequenceAssignListWithinBlock :
 	SequenceAssignListWithinBlock _COMMA SequenceAssign  { add_a_new_sequence_element ($1,$3) ;  $$=$1;}
 	| SequenceAssign  {$$=$1;}
 ;
-
-
 
 SequenceAssign :
 	SequenceAssignSingle { $$= $1  ; }

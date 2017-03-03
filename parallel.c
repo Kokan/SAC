@@ -241,10 +241,10 @@ int para_browse_choice_content ( choice_content * cc1, choice_content *cc2,int l
 	IE_chain * ic2;
 	while ((cc1!=NULL)&&(cc2!=NULL)) {		
 		
-		if (cc1->threedots ||  cc2->threedots ) {/*In case of Three Dots: special case */
+		if (cc1->threedots ||  cc2->threedots ) {/*In case of Three Dots or extensions: special case */
 			tdflag=1;
 			if (cc1->threedots!=cc2->threedots) {
-				print_error("ERROR:  ... (extension) MISMATCH in a CHOICE",line1,line2); 
+				print_error("ERROR:  Extension MISMATCH in a CHOICE",line1,line2); 
 				return (1);
 			}
 		}
