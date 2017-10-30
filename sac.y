@@ -37,6 +37,12 @@ char *content2;
 definition_ptr my_list = NULL;
 definition_ptr my_list1 = NULL;
 definition_ptr my_list2 = NULL;
+
+
+definition_pt_ptr my_list_pt = NULL;
+definition_pt_ptr my_list1_pt = NULL;
+definition_pt_ptr my_list2_pt = NULL;
+
  
 /*We will store the constants in this list*/ 
 extern constant * constant_list;
@@ -240,6 +246,19 @@ element * new_element_INTEGER ( int type, int low, int high,char *s1,char *s,int
 	return (tmp);
 };
 
+element * new_element_PT ( char *s, element *el,int noline )
+{
+	element *tmp;
+	tmp=malloc (sizeof(element));
+	tmp->type=8; /*Parameterized Type*/
+	tmp->partype.name=s;
+	tmp->partype.link=el;
+	tmp->line=noline;
+	return (tmp);
+};
+
+
+
 sequence_content * new_sequence_content (char * s,element * el,int op, int def, int tdots )
 
 {
@@ -269,7 +288,8 @@ choice_content * new_choice_content (char * s,element * el,int tdots )
 
 void Add_an_element_in_Choice (choice_content  * list, choice_content  *nouveau)
 {
-    if(list == NULL) {        
+    if(list == NULL) {  
+		list=nouveau;
     }
     else
     {
@@ -287,7 +307,7 @@ void add_a_new_sequence_element (sequence_content  * list, sequence_content  *ne
 {
     if(list == NULL)
     {
-        
+		list=new;    
     }
     else
     {
@@ -360,7 +380,63 @@ definition_ptr add_last (definition_ptr list, int l,char* s, element * elt )
     }
 }
 
+/* --------- Parameterized type----------------*/
 
+
+
+ element * duplicate_elem (element * el) {
+
+	element *tmp;
+	tmp=malloc (sizeof(element));
+	memcpy(tmp, el,sizeof(element));
+	return (tmp);
+}
+
+
+choice_content * duplicate_choice_content (choice_content * cc) {
+	choice_content *tmp;
+	tmp=malloc (sizeof(choice_content));
+	memcpy(tmp, cc,sizeof(choice_content));
+	return (tmp);
+}
+
+sequence_content * duplicate_sequence_content (sequence_content * sc) {
+	sequence_content *tmp;
+	tmp=malloc (sizeof(sequence_content));
+	memcpy(tmp, sc,sizeof(sequence_content));
+	return (tmp);
+}
+
+
+
+definition_pt_ptr add_last_pt (definition_pt_ptr list, int l,char* s, element * elt,char* s2 )
+{
+	definition_pt* new_element_pt = malloc(sizeof(definition_pt));
+ 
+	new_element_pt->line = l;
+	new_element_pt->leftname = s ;
+	new_element_pt->elem = elt ; 
+	new_element_pt->nxt = NULL;
+	new_element_pt->ref_variable = s2;
+	
+	
+ 
+    if(list == NULL)
+    {
+        return new_element_pt;
+    }
+    else
+    {
+  
+        definition_pt* temp=list;
+        while(temp->nxt != NULL)
+        {
+            temp = temp->nxt;
+        }
+        temp->nxt = new_element_pt;
+        return list;
+    }
+}
 
 /* --------- Printing for debugging----------------*/
 
@@ -516,6 +592,13 @@ void print_element (element  el,int offset, FILE *F)
 			}
 			break;
 		}
+
+		case 8 : { /* Parameterized Type */
+			fprintf (F," %s { ", el.partype.name ); 
+			print_element (*(el.partype.link), offset, F);
+			fprintf (F," } " );
+			break;
+		}
 		
 		
 		case 10 : { /* IE name */
@@ -640,20 +723,40 @@ void print_PDU (definition_ptr liste,FILE *F){
 	fprintf(F,"\n");
 }
 
+void print_liste_PT(definition_pt * liste,FILE *F)
+/*this function prints all the Parameterized type */
+
+{
+    definition_pt *tmp = liste;
+	fprintf(F,"Printing the  List of Parameterized type definitions \n");
+    while(tmp != NULL)
+    {
+       fprintf(F,"%s { %s } ::= ", tmp->leftname ,tmp->ref_variable );
+	    print_element (*(tmp->elem),0,F); 
+	   fprintf(F,"\n\n");
+       tmp = tmp->nxt;
+    }
+}
+
+
+
 /* ---- End of Printing Functions ------- */
 
 
-void   browse_element (element  * elptr) ;
+void   browse_element (element   * * elptr) ;
 /* added here for recursivity */
-
+void   browse_element_PT (element ** el_double_ptr,char * s, element * reference) ;
+/* added here for recursivity */
 
 void browse_content_sequence ( sequence_content  * liste)
 {	int i;
+
+	
     sequence_content  *tmp = liste;
     while(tmp != NULL)
     { 
 		if (!tmp->threedots) { 	/*In case of "three dots" elem is NULL */
-			browse_element (tmp->elem); 
+			browse_element (&(tmp->elem)); 
 		}
 		tmp = tmp->nxt;
     }
@@ -665,17 +768,19 @@ void browse_choice_sequence ( choice_content  * liste)
     while(tmp != NULL)
     {
 		if (!tmp->threedots) /*In case of "three dots" elem is NULL */
-			browse_element (tmp->elem); 
+			browse_element (&(tmp->elem)); 
 		tmp = tmp->nxt;
     }
 }
 
 
-void   browse_element (element * elptr) 
+
+
+void   browse_element (element ** el_double_ptr) 
 /* here we look at definitions only in my_list*/
 /* this can be enhanced later */
 /*The function will also give a value to constants in INTEGER Range*/
-{	
+{	element * elptr= * el_double_ptr;
 	switch (elptr->type) {
 		case 0 : {
 			browse_content_sequence ( elptr->a);
@@ -702,7 +807,7 @@ void   browse_element (element * elptr)
 		
 		
 			if (elptr->string.link!=NULL) {
-				browse_element (elptr->string.link);
+				browse_element (&(elptr->string.link));
 			}
 			break;
 		}
@@ -725,7 +830,7 @@ void   browse_element (element * elptr)
 			
 			
 			if (elptr->string.link!=NULL) {
-				browse_element (elptr->string.link);
+				browse_element (&(elptr->string.link));
 			}
 			break;
 		}
@@ -743,7 +848,37 @@ void   browse_element (element * elptr)
 		}
 		
 		
-		case 10 : { /* IE name */
+	case 8 : { /* Parameterized Type    */
+			/* we look for the definition of this IE */
+			
+			definition_pt *tmp_PT = my_list_pt;
+			definition_pt *tmp_PT2 = NULL;
+			while(tmp_PT != NULL)
+			{
+				if (!strcmp (tmp_PT->leftname,elptr->partype.name)){
+					tmp_PT2=tmp_PT;
+				} 
+				tmp_PT = tmp_PT->nxt; 
+			}	
+			
+		
+		
+		
+			(*el_double_ptr)=tmp_PT2->elem; 
+		
+			
+		
+			
+			
+			/*the parameterized type will be duplicated recursively */
+		
+
+			browse_element_PT (el_double_ptr,tmp_PT2->ref_variable, elptr->partype.link); 
+		
+			break;
+		}
+		
+		case 10 : { /* IE name    */
 			/*printf ("ON CHERCHE: :%s\n", elptr->IE.IE_name); */
 			/* we look for the definition of this IE */
 			
@@ -758,6 +893,7 @@ void   browse_element (element * elptr)
 				tmp = tmp->nxt;
 			}	
 			break;
+				
 		}
 		
 		case 11 : { /*SEQUENCE OF. Give value to constant and link to content*/
@@ -773,12 +909,186 @@ void   browse_element (element * elptr)
 				}
 			}
 			if (elptr->sequence_of.link!=NULL) {
-				browse_element (elptr->sequence_of.link);}
+				browse_element (&(elptr->sequence_of.link));}
 			break;
 		}
 		
 	}
 }
+
+
+choice_content * duplicate_choice_content_list (choice_content * cc) {
+	choice_content * tmp= cc;
+	choice_content * tmp2= NULL;
+	choice_content * new= NULL;
+		
+	/* copy but in reverse order */
+	while (tmp!=NULL) {
+		tmp2= duplicate_choice_content (tmp);
+		tmp2->nxt=new;
+		new=tmp2;
+		tmp=tmp->nxt;
+	}
+	/*now reverse the order */
+	tmp=new;
+	new=NULL;
+		
+	while (tmp!=NULL) {
+		tmp2=tmp->nxt;
+		tmp->nxt=new;
+		new=tmp;
+		tmp=tmp2;
+	}
+	return (new);
+}
+
+void browse_content_choice_PT ( choice_content ** double_choice_ptr,char * s, element * reference)
+{	
+	choice_content * tmp = NULL;
+	*double_choice_ptr = duplicate_choice_content_list (*double_choice_ptr);
+    tmp=*double_choice_ptr;
+	while(tmp != NULL)
+    {
+		/*There should not be 3 dots in a PT definition  */
+		/*Thus tmp->elem is not NULL */
+		browse_element_PT (&(tmp->elem),s, reference); 
+		tmp = tmp->nxt;
+	}
+}
+
+
+    
+sequence_content * duplicate_sequence_content_list (sequence_content * sc) {
+	sequence_content * tmp= sc;
+	sequence_content * tmp2= NULL;
+	sequence_content * new= NULL;
+		
+	/* copy but in reverse order */
+	while (tmp!=NULL) {
+		tmp2= duplicate_sequence_content (tmp);
+		tmp2->nxt=new;
+		new=tmp2;
+		tmp=tmp->nxt;
+	}
+	/*now reverse the order */
+	tmp=new;
+	new=NULL;
+		
+	while (tmp!=NULL) {
+		tmp2=tmp->nxt;
+		tmp->nxt=new;
+		new=tmp;
+		tmp=tmp2;
+	}
+	return (new);
+}
+
+void browse_content_sequence_PT ( sequence_content ** double_sequence_ptr,char * s, element * reference)
+{	sequence_content * tmp= NULL;
+	
+	*double_sequence_ptr = duplicate_sequence_content_list (*double_sequence_ptr);
+	tmp= *double_sequence_ptr;
+
+    while(tmp != NULL)
+    {
+		/*There should not be 3 dots in a PT definition  */
+		/*Thus tmp->elem is not NULL */
+		browse_element_PT (&(tmp->elem),s, reference); 
+		tmp = tmp->nxt;
+    }
+				
+}
+
+
+
+
+
+void   browse_element_PT (element ** el_double_ptr,char * s, element * reference) 
+/* here we look at definitions only in my_list*/
+/* this can be enhanced later */
+/*The function will also give a value to constants in INTEGER Range*/
+{	
+	
+	(*el_double_ptr)=duplicate_elem ((*el_double_ptr));
+	element * elptr= * el_double_ptr;
+
+
+
+	switch (elptr->type) {
+		case 0 : { /*Sequence */
+			browse_content_sequence_PT ( &(elptr->a),s,reference);
+			break;
+		}
+		case 1 : { /* CHOICE */
+			browse_content_choice_PT ( &(elptr->b),s,reference);
+			break;
+		}
+		
+		case 4 : { /* BITSTRING */
+			printf ("BITSTRING in Parameterized type: CURRENTLY NOT SUPPORTED");
+			break;
+		}
+		
+		case 5 : { /* OCTETSTRING */
+			printf ("OCTETSTRING in Parameterized type: CURRENTLY NOT SUPPORTED");
+			break;
+		}
+		
+		case 7 : { /*INTEGER give value to constant */
+			printf ("INTEGER in Parameterized type: CURRENTLY NOT SUPPORTED");
+			break;
+		}
+		
+	case 8 : { /* Parameterized Type    */
+			printf ("Recuresive Parameterized type: CURRENTLY NOT SUPPORTED");
+			break;
+		}
+		
+		case 10 : { /* IE name    */
+			/* It could be the reference */
+
+			if (!strcmp (s,elptr->IE.IE_name)){
+				(*el_double_ptr)=reference; 
+			} 
+			else 
+			{	/* if it was not the reference,the IE has to be found */
+				/* we look for the definition of this IE */
+			
+				definition *tmp = my_list;
+				while(tmp != NULL)
+				{
+					if (!strcmp (tmp->leftname,elptr->IE.IE_name)){
+						printf("DEUBG DEFINITION TROUVEE: %s\n",tmp->leftname ); 
+						elptr->IE.link=tmp->elem;
+						tmp->PDU=0;
+					}
+					tmp = tmp->nxt;
+				}	
+			}
+			break;
+				
+		}
+		
+		case 11 : { /*SEQUENCE OF. Give value to constant and link to content*/
+			if (elptr->sequence_of.type!=0) {
+				if (elptr->sequence_of.idlow!=NULL) {
+					elptr->sequence_of.low=find_value(elptr->sequence_of.idlow,constant_list);
+					if (verbose) fprintf(Logfile,"Constant Assignment for SIZE in SEQUENCE OF  %s=%d\n",elptr->sequence_of.idlow,elptr->sequence_of.low);
+				}			
+			
+				if (elptr->sequence_of.idhigh!=NULL) {
+					elptr->sequence_of.high=find_value(elptr->sequence_of.idhigh,constant_list);
+					if (verbose) fprintf(Logfile,"Constant Assignment for SIZE in SEQUENCE OF  %s=%d\n",elptr->sequence_of.idhigh,elptr->sequence_of.high);
+				}
+			}
+			if (elptr->sequence_of.link!=NULL) {
+				browse_element_PT (&(elptr->sequence_of.link),s,reference);}
+			break;
+		}
+		
+	}
+}
+
 
 void the_big_link (definition_ptr liste)
 /* This goal of this function is to link the definitions and the names*/
@@ -790,7 +1100,7 @@ void the_big_link (definition_ptr liste)
 	printf("Link ");
     while(tmp != NULL)
     {
-	   browse_element (tmp->elem); 
+	   browse_element (&(tmp->elem)); 
        tmp = tmp->nxt;
     }
 	printf(" OK \n");
@@ -905,6 +1215,13 @@ Assignment :
 									
 									}
 	| _SMALLNAME _INTEGER _ASSIGN _ENTIER {constant_list=new_constant(constant_list,$1.id,$4,$2);}
+	|
+	_BIGNAME _OPENC _BIGNAME _CLOSEC  _ASSIGN LeftPart {
+			if (verbose) /*Only if we allow debug/log output */
+				fprintf (Logfile,"Parse as Parameterized Type %s Line %d with parameter %s\n",$1.id,line_counter,$3.id); 
+			my_list_pt= add_last_pt(my_list_pt,$5,$1.id,$6,$3.id) ;
+	}
+	
 ;
 
 ChoiceContent :
@@ -984,8 +1301,7 @@ SequenceAssign :
 	/*This is a hack to handle the only case of DEFAULT with binary in 36.331'ASN1 */
 	|	_SMALLNAME _BIGNAME WithComponent { $$= new_sequence_content ($1.id,new_element_IE_name ( $2.id,$2.val),0,0,0 )  ; } 
 	|	_THREEDOTS { $$= new_sequence_content ("",NULL,-1,0,1 )   ; } /*As it is a "Three Dots", only the last element is useful*/
-/*	|	_ODSB { $$= new_sequence_content ("",NULL,-1,0,2 )   ; } */ 
-/*	|	_CDSB { $$= new_sequence_content ("",NULL,-1,0,3 )   ; } */ 
+
 	
 ;
 
@@ -1025,6 +1341,8 @@ LeftPart :
 	|  bitstrings {$$=$1;}
 	| octetstrings {$$=$1;}
 	| _NULL {$$=new_element_NULL ($1);}
+	| _BIGNAME _OPENC LeftPart _CLOSEC  { $$=new_element_PT ( $1.id,$3,$1.val); }
+	
 ;
 
 
@@ -1095,6 +1413,7 @@ void yyerror(const char * msg)
 {
 printf ( "Erreur : %s\n",msg  );
 }
+
 
 
 

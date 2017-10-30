@@ -40,6 +40,11 @@ extern  definition_ptr my_list ;
 extern  definition_ptr my_list1 ;
 extern  definition_ptr my_list2 ;
 
+extern  definition_ptr my_list_pt ;
+extern  definition_ptr my_list1_pt ;
+extern  definition_ptr my_list2_pt ;
+
+
 extern int print_warnings;
 extern char * content1;
 extern char * content2;
@@ -136,10 +141,17 @@ int simple_analyse () {
 		printf ("OK\n");
 		add_BR();
 		my_list1=my_list;
+		my_list1_pt=my_list_pt;
 		if (verbose) print_liste(my_list,Logfile); 
 		if (verbose) print_constant (constant_list,Logfile);
+		if (verbose) print_liste_PT (my_list_pt,Logfile);
 		the_big_link (my_list);
+	
+		if (verbose) fprintf (Logfile,"** Definitions after the link ** \n");
+		if (verbose) print_liste(my_list,Logfile); 
+
 		my_list=NULL;
+		my_list_pt=NULL;
 	
 	}
 	add_BR();
@@ -154,8 +166,13 @@ int simple_analyse () {
 		add_BR();
 		if (verbose) print_liste(my_list,Logfile);
 		if (verbose) print_constant (constant_list,Logfile);
+		if (verbose) print_liste_PT (my_list_pt,Logfile);
 		the_big_link (my_list);
+		if (verbose) fprintf (Logfile,"** Definitions after the link ** \n");
+		if (verbose) print_liste(my_list,Logfile); 
+
 		my_list2=my_list;
+		my_list2_pt=my_list_pt;
 	}	
 	add_BR();
 		
@@ -312,3 +329,4 @@ char **argv;
 	add_BR();
 	return 0;
 }
+

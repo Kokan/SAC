@@ -39,6 +39,18 @@ struct definition
 typedef definition * definition_ptr;
 
 
+typedef struct definition_pt definition_pt;
+struct definition_pt
+{
+	int line;
+	char* leftname;
+	element * elem; 
+    struct definition_pt *nxt;
+	char* ref_variable; /*The IE that will be referred in the definition */
+};
+typedef definition_pt * definition_pt_ptr;
+
+
 typedef struct constant constant;
 struct constant
 {
@@ -88,7 +100,8 @@ struct enum_struc {
 struct element
 {
 	int type; /*0:SEQUENCE, 1: CHOICE, 2:NULL, 3:BOOLEAN, 4:BITSTRING, 5:OCTET STRING 
-			6:ENUMERATED, 7:INTEGER, 10:Identifier (name with upper case first letter) 11: SEQUENCE OF*/
+			6:ENUMERATED, 7:INTEGER, 10:Identifier (name with upper case first letter) 11: SEQUENCE OF
+			8:Parameterized Type */
 	int line;
 	union  {
 		sequence_content * a; /*0:SEQUENCE */
@@ -131,8 +144,14 @@ struct element
 			char * idhigh; /* high */		
 			
 		} sequence_of ;
+		
+		struct  {
+			char * name;  /* 8: PARAMETERIZED TYPE  */
+			element * link;		
+		} partype ;
 	};
 
 };
+
 
 
