@@ -17,7 +17,6 @@
 
 /*TO DO List: */
 /*add line reference for "..." in a CHOICE */
-/*check that additions after "..." are done in the right order (more elements in the new file) */
 /*give the value of constant when they are the source of error*/
 /*give the line of the DEFAULT assignment for ENUMERATED*/
 
@@ -199,7 +198,7 @@ int para_browse_content_sequence ( sequence_content * sc1, sequence_content * sc
 					print_warning ("Warning: name mismatch in a SEQUENCE ",sc1->elem->line,sc2->elem->line);
 					add_BR();
 					add_BR();
-\
+
 				}
 			}
 			IEChain1=add_IE2(IEChain1,sc1->ie_value_name);	
@@ -227,6 +226,11 @@ int para_browse_content_sequence ( sequence_content * sc1, sequence_content * sc
 
 			new_branch_browse_content_sequence (sc2,1,l2);
 
+	}
+
+	/*checks if the old file contains more element than the new file*/
+	if ((tdflag)&&(sc2==NULL)&&(sc1!=NULL)) { 
+			print_error("ERROR: Old file Contains too much elements in a extended SEQUENCE",l1,l2); 
 	}
 	
 	if ((!tdflag)&&(!((sc1==NULL)&&(sc2==NULL)))) {
@@ -261,13 +265,20 @@ int para_browse_choice_content ( choice_content * cc1, choice_content *cc2,int l
 			para_browse_element (cc1->elem, cc2->elem,1,0,NULL,NULL);
 			IEChain1=remove_last_IE(IEChain1);
 			IEChain2=remove_last_IE(IEChain2);
-	
 
 		}
 		cc1=cc1->nxt;
 		cc2=cc2->nxt;
 
 	}
+	/*checks if the old file contains more element than the new file*/
+	if ((tdflag)&&((cc1!=NULL)&&(cc2==NULL))) {
+		print_error("ERROR: Old file Contains too much elements in a extended CHOICE",line1,line2); 
+	}
+	return (0);
+	
+	
+
 	if ((!tdflag)&&(!((cc1==NULL)&&(cc2==NULL)))) {
 		print_error("ERROR: ONE OF THE 2 CHOICE IS TOO LONG",line1,line2); 
 	}

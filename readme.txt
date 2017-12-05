@@ -414,8 +414,41 @@ PDU-190 ::= OCTET STRING (SIZE (1..5))
 file2:
 PDU-190 ::= OCTET STRING  (SIZE (1..6)) 
 
+3.1.20 Old file Contains too much elements in a extended SEQUENCE
+In an SEQUENCE, extended with "..."the new old file contains more elements than the new file.
 
+example:
+file1:
+PDU-200::=SEQUENCE {
+	a BOOLEAN,
+	...,
+	b BOOLEAN,
+	c BOOLEAN
+}
+file2:
+PDU-200::=SEQUENCE {
+	a BOOLEAN,
+	...,
+	b BOOLEAN
+}
 
+3.1.21 Old file Contains too much elements in a extended CHOICE
+In an CHOICE, extended with "..."the new old file contains more elements than the new file.
+
+example:
+file1:
+PDU-210::=CHOICE {
+	a BOOLEAN,
+	...,
+	b BOOLEAN,
+	c BOOLEAN
+}
+file2:
+PDU-210::=CHOICE {
+	a BOOLEAN,
+	...,
+	b BOOLEAN
+}
 
 3.2 List of Warning Messages
 
@@ -670,6 +703,8 @@ Extension-W-0130 ::= SEQUENCE {
 	b1	ENUMERATED {e1},
 	b2	BOOLEAN
 }
+
+
 
 4 Macro for 36.331
 This Word macro removes the non-ASN.1 text from 36.331.
