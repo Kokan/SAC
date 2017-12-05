@@ -66,7 +66,7 @@ struct constant
 typedef struct sequence_content sequence_content;
 struct sequence_content
 {	char * ie_value_name;
-	int optionality; /*0: Mandatory, 1:OPTIONAL, 2: DEFAULT integer, 3:DEFAULT for ENUMERATED, -1: N/A (in case of Three Dots for example*/
+	int optionality; /*0: Mandatory, 1:OPTIONAL, 2: DEFAULT integer, 3:DEFAULT for ENUMERATED / INTEGER (string), -1: N/A (in case of Three Dots for example*/
 	int default_value; /* for INTEGER */ 
 	char * default_str; /* for ENUMERATED */
 	element * elem;
@@ -152,6 +152,5 @@ struct element
 	};
 
 };
-
 
 

@@ -209,10 +209,18 @@ int para_browse_content_sequence ( sequence_content * sc1, sequence_content * sc
 	
 			switch (sc1->optionality) {
 				case 1 : { /* OPTIONAL */								
-							break;						
-						}
+						break;						
+					}
 				case 2 : { /* DEFAULT */
-							break;		
+					/*in case of INTEGER, checks if DEFAULT value are the same */
+					if (7==sc1->elem->type) {
+						if (sc1->default_value!=sc2->default_value) {
+							/*The two INTEGERS do not have the same DEFAULT Value */
+							print_error ("ERROR: INTEGER DEFAULT mismatch ",sc1->elem->line,sc2->elem->line);
+						}
+					}
+				
+					break;		
 				}
 			}
 		}
@@ -480,7 +488,6 @@ int i2;
 			}
 			
 			case 4 : { /* BITSTRING  */
-
 				if (t1->string.type!=t2->string.type) { 
 					/*The two SIZE of BIT STRING do not have the same type */
 					print_error ("ERROR: SIZE type mismatch for BITSTRING ",t1->line,t2->line);
@@ -515,7 +522,6 @@ int i2;
 			}
 			
 			case 5 : { /* OCTETSTRING  */
-			
 				if (t1->string.type!=t2->string.type) { 
 					/*The two SIZE of BIT STRING do not have the same type */
 					print_error ("ERROR: SIZE type mismatch for OCTET STRING ",t1->line,t2->line);
@@ -565,6 +571,7 @@ int i2;
 					print_error ("ERROR: INTEGER type mismatch ",t1->line,t2->line);
 					break;
 				}
+				
 				
 				if  ((t1->integ.low!=t2->integ.low) || ((t1->integ.high!=t2->integ.high))) {
 					/*The two INTEGERS do not have the same limits */

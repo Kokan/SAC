@@ -756,6 +756,12 @@ void browse_content_sequence ( sequence_content  * liste)
     while(tmp != NULL)
     { 
 		if (!tmp->threedots) { 	/*In case of "three dots" elem is NULL */
+			/* Allocation from Variable for Default in case of INTEGER*/
+			if ((7==tmp->elem->type)&&(3==tmp->optionality)) {
+				tmp->default_value=find_value(tmp->default_str,constant_list);
+				if (verbose) fprintf(Logfile,"Constant Assignment for DEFAULT value of INTEGER %s=%d\n",tmp->default_str,tmp->default_value);
+				tmp->optionality=2;
+				}
 			browse_element (&(tmp->elem)); 
 		}
 		tmp = tmp->nxt;
@@ -1413,7 +1419,6 @@ void yyerror(const char * msg)
 {
 printf ( "Erreur : %s\n",msg  );
 }
-
 
 
 
