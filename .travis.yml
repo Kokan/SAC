@@ -1,5 +1,5 @@
 # Copyright (C) 2015 Nokia Solutions and Networks. 
-
+# Copyright (C) 2007 Kokan
 #    This file is part of "Simple ASN.1 Checker".                                   
 #                                                                                   
 #   "Simple ASN.1 Checker" is free software: you can redistribute it and/or modify  
@@ -15,28 +15,9 @@
 #    You should have received a copy of the GNU General Public License              
 #    along with "Simple ASN.1 Checker".  If not, see <http://www.gnu.org/licenses/>.
 
-LEX     = flex
-YACC    = bison
-YFLAGS  = -d
+language: c
 
-SAC_EX=sac.exe
-
-all: $(SAC_EX)
-
-$(SAC_EX) : lex.yy.c
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $(SAC_EX) lex.yy.c  sac.tab.c parallel.c main.c
-
-lex.yy.c: sac.l sac.tab.c
-	$(LEX)  sac.l
-
-sac.tab.c: sac.y
-	$(YACC) $(YFLAGS) sac.y
-
-clean:
-	$(RM) $(SAC_EX) lex.yy.c sac.tab.c sac.tab.h
-
-test:
-	@echo "Dummy test target"
-
-.PHONY: clean test
+compiler:
+  - clang
+  - gcc
 
