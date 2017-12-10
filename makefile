@@ -15,17 +15,25 @@
 #    You should have received a copy of the GNU General Public License              
 #    along with "Simple ASN.1 Checker".  If not, see <http://www.gnu.org/licenses/>.
 
+LEX     = flex
+YACC    = bison
+YFLAGS  = -d
 
-all:sac.exe
+SAC_EX=sac.exe
 
-sac.exe : lex.yy.c   
-	gcc -o sac.exe lex.yy.c  sac.tab.c parallel.c main.c
+all: $(SAC_EX)
+
+$(SAC_EX) : lex.yy.c
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $(SAC_EX) lex.yy.c  sac.tab.c parallel.c main.c
 
 lex.yy.c: sac.l sac.tab.c
-	flex  sac.l
-
+	$(LEX)  sac.l
 
 sac.tab.c: sac.y
-	bison -d sac.y
-	
+	$(YACC) $(YFLAGS) sac.y
+
+clean:
+	$(RM) $(SAC_EX) lex.yy.c sac.tab.c sac.tab.h
+
+.PHONY: clean
 
