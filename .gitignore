@@ -1,0 +1,6 @@
+*.o
+lex.yy.c
+sac.exe
+sac.tab.c
+sac.tab.h
+
